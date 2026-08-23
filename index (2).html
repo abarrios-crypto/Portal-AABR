@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>PortalClases — Agenda</title>
+
+<!-- Enlace correcto al manifiesto real para Android e iOS -->
+<link rel="manifest" href="manifest.json?v=2">
+<meta name="theme-color" content="#007bff">
+
+<!-- Soporte para iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PortalClases-ABarrios">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg-outer:#05141d;
+  --panel-blue-dark:#0a2233;
+  --panel-blue:#123852;
+  --panel-blue-light:#1a4a68;
+  --border-cyan:#5cd3f0;
+  --border-cyan-soft:#2f7fa0;
+  --grid-dot:rgba(92,211,240,.10);
+  --grid-dot-strong:rgba(92,211,240,.22);
+  --red:#e35b4f;
+  --red-dark:#7a231c;
+  --red-light:#ff9a8d;
+  --orange:#eb9a5e;
+  --orange-dark:#8a4a1f;
+  --orange-text:#3a2210;
+  --teal:#59c2a3;
+  --teal-dark:#1f5c4a;
+  --teal-text:#0d2e24;
+  --cream:#e8f7fc;
+  --yellow:#f2c94c;
+  --font-display:'Press Start 2P', monospace;
+  --font-body:'VT323', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(ellipse at 50% 0%, #0d2b3d 0%, #05141d 60%),
+    var(--bg-outer);
+  color:var(--cream);
+  font-family:var(--font-body);
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:18px 10px 40px;
+}
+
+.app{
+  width:100%;
+  max-width:640px;
+  border:3px solid var(--border-cyan);
+  border-radius:6px;
+  background:linear-gradient(180deg, var(--panel-blue) 0%, var(--panel-blue-dark) 100%);
+  box-shadow:0 0 0 1px #000, 0 0 24px rgba(92,211,240,.25), inset 0 0 30px rgba(0,0,0,.35);
+  overflow:hidden;
+  position:relative;
+}
+
+/* ---------- HEADER ---------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-bottom:3px solid var(--border-cyan);
+  background:linear-gradient(180deg, #163f5a, #0d2c40);
+}
+.logo-hex{
+  flex:0 0 auto;
+  width:40px;height:40px;
+  border-radius:50%;
+  background:var(--panel-blue-dark);
+  border:3px solid var(--border-cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);
+  font-size:9px;
+  color:var(--border-cyan);
+  position:relative;
+}
+.logo-hex::before,.logo-hex::after{
+  content:"";
+  position:absolute;
+  width:9px;height:9px;
+  border-radius:50%;
+  background:var(--border-cyan);
+  top:11px;
+}
+.logo-hex::before{left:7px;}
+.logo-hex::after{right:7px;}
+
+.title-block{flex:1 1 auto; min-width:0;}
+.title{
+  font-family:var(--font-display), 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size:12px;
+  color:var(--cream);
+  letter-spacing:1px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.subtitle{
+  font-family:var(--font-body);
+  font-size:15px;
+  color:var(--border-cyan);
+  letter-spacing:1px;
+  margin-top:2px;
+}
+
+.week-ticks{
+  display:flex;
+  gap:3px;
+  flex:0 0 auto;
+}
+.week-ticks span{
+  width:9px;height:16px;
+  background:var(--panel-blue-dark);
+  border:2px solid var(--border-cyan-soft);
+  border-radius:2px;
+}
+.week-ticks span.filled{
+  background:var(--teal);
+  border-color:var(--teal-dark);
+  box-shadow:0 0 6px rgba(89,194,163,.8);
+}
+
+.badge-hex{
+  flex:0 0 auto;
+  width:38px;height:38px;
+  background:var(--panel-blue-dark);
+  border:3px solid var(--orange);
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--orange);
+  position:relative;
+}
+.badge-hex .dot{
+  position:absolute;
+  top:-6px;right:-6px;
+  background:var(--red);
+  border:2px solid var(--panel-blue-dark);
+  border-radius:50%;
+  min-width:18px;height:18px;
+  font-size:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  padding:0 2px;
+}
+.badge-hex svg{width:20px;height:20px;}
+.badge-hex.tingle{animation:tingle 1.1s infinite;}
+@keyframes tingle{
+  0%,100%{box-shadow:0 0 0 rgba(227,91,79,0);}
+  50%{box-shadow:0 0 10px 2px rgba(227,91,79,.75);}
+}
+
+/* spiderman wink: faint web threads in corners of the app frame */
+.app::before, .app::after{
+  content:"";
+  position:absolute;
+  width:120px;height:120px;
+  pointer-events:none;
+  opacity:.16;
+  background:
+    repeating-conic-gradient(from 0deg, transparent 0deg 24deg, var(--border-cyan) 24.5deg 25deg),
+    radial-gradient(circle, transparent 0 12px, transparent 12px);
+  -webkit-mask:radial-gradient(circle at 0 0, black 0 100%);
+  mask:radial-gradient(circle at 0 0, black 0 100%);
+  z-index:0;
+}
+.app::before{top:-2px;left:-2px;}
+.app::after{bottom:-2px;right:-2px;transform:rotate(180deg);}
+
+/* semester ruler (15-week block) */
+.semester-ruler{
+  padding:8px 12px 0;
+  position:relative;
+  z-index:1;
+}
+.semester-ruler .label{
+  font-family:var(--font-display);
+  font-size:9px;
+  color:var(--border-cyan);
+  margin-bottom:5px;
+  letter-spacing:.5px;
+  display:flex;
+  justify-content:space-between;
+}
+.ruler-ticks{
+  display:flex;
+  gap:2px;
+}
+.ruler-ticks span{
+  flex:1 1 0;
+  height:10px;
+  background:var(--panel-blue-dark);
+  border:1px solid var(--border-cyan-soft);
+  border-radius:1px;
+}
+.ruler-ticks span.past{background:var(--teal);border-color:var(--teal-dark);}
+.ruler-ticks span.current{
+  background:var(--red);
+  border-color:var(--red-dark);
+  animation:tingle 1.1s infinite;
+}
+
+/* ---------- MARQUEE / LETRERO ANIMADO ---------- */
+.marquee-wrap{
+  margin:8px 12px 0;
+  border:2px solid var(--border-cyan-soft);
+  border-radius:4px;
+  background:var(--panel-blue-dark);
+  overflow:hidden;
+  position:relative;
+  z-index:1;
+  padding:6px 0;
+  cursor:pointer;
+}
+.marquee-track{
+  display:inline-block;
+  white-space:nowrap;
+  padding-left:100%;
+  font-family:var(--font-body);
+  font-size:17px;
+  color:var(--cream);
+  animation:marquee-scroll linear infinite;
+}
+.marquee-track.paused{
+  animation-play-state:paused;
+}
+.marquee-track b{
+  color:var(--border-cyan);
+  font-weight:normal;
+}
+@keyframes marquee-scroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-100%); }
+}
+
+/* ---------- BANNER ---------- */
+.banner{
+  margin:0 12px;
+  background:var(--orange);
+  border:2px solid var(--orange-dark);
+  border-radius:6px;
+  color:var(--orange-text);
+  font-family:var(--font-display);
+  font-size:10px;
+  text-align:center;
+  padding:0 10px;
+  max-height:0;
+  line-height:1.6;
+  letter-spacing:.5px;
+  opacity:0;
+  overflow:hidden;
+  transition:max-height .25s ease, opacity .25s ease, padding .25s ease, margin .25s ease;
+  pointer-events:none;
+}
+.banner.show{
+  max-height:60px;
+  margin:10px 12px 0;
+  padding:8px 10px;
+  opacity:1;
+}
+
+/* ---------- BODY LAYOUT ---------- */
+.app-body{
+  display:flex;
+  gap:10px;
+  padding:12px;
+  position:relative;
+  z-index:1;
+}
+
+.side-nav{
+  flex:0 0 52px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.hex-btn{
+  width:52px;height:44px;
+  background:var(--red);
+  border:0;
+  color:#fff2ee;
+  font-family:var(--font-display);
+  font-size:12px;
+  cursor:pointer;
+  clip-path:polygon(0% 0%, 78% 0%, 100% 50%, 78% 100%, 0% 100%);
+  box-shadow:inset -3px -4px 0 var(--red-dark), inset 3px 3px 0 var(--red-light);
+  transition:filter .15s;
+}
+.hex-btn small{display:block;font-family:var(--font-body);font-size:9px;margin-top:2px;opacity:.85;}
+.hex-btn.active{
+  background:var(--teal);
+  box-shadow:inset -3px -4px 0 var(--teal-dark), inset 3px 3px 0 #a9e8d4;
+  color:var(--teal-text);
+}
+.hex-btn:active{filter:brightness(.85);}
+
+.avatar-hex{
+  margin-top:auto;
+  width:52px;height:52px;
+  border-radius:12px;
+  background:var(--red);
+  border:3px solid var(--red-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);
+  font-size:9px;
+  color:#fff;
+  text-align:center;
+  line-height:1.4;
+}
+
+/* ---------- SCREEN ---------- */
+.screen{
+  flex:1 1 auto;
+  min-width:0;
+  background:
+    linear-gradient(var(--grid-dot) 1px, transparent 1px) 0 0/16px 16px,
+    linear-gradient(90deg, var(--grid-dot) 1px, transparent 1px) 0 0/16px 16px,
+    var(--panel-blue-dark);
+  border:3px solid var(--border-cyan);
+  border-radius:4px;
+  padding:12px;
+  min-height:340px;
+  position:relative;
+}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.panel-title{
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--border-cyan);
+  letter-spacing:1px;
+  margin:0 0 10px;
+  border-bottom:2px dashed var(--border-cyan-soft);
+  padding-bottom:8px;
+}
+
+/* ---- Horario ---- */
+.day-row{
+  display:flex;
+  gap:5px;
+  overflow-x:auto;
+  padding-bottom:8px;
+  margin-bottom:8px;
+}
+.day-pill{
+  flex:0 0 auto;
+  font-family:var(--font-body);
+  font-size:15px;
+  background:var(--panel-blue);
+  border:2px solid var(--border-cyan-soft);
+  color:var(--cream);
+  border-radius:16px;
+  padding:5px 12px;
+  cursor:pointer;
+}
+.day-pill.active{
+  background:var(--teal);
+  color:var(--teal-text);
+  border-color:var(--teal-dark);
+  font-weight:bold;
+}
+
+.class-card, .task-card, .goal-card{
+  background:var(--panel-blue);
+  border:2px solid var(--border-cyan-soft);
+  border-radius:6px;
+  padding:8px 10px;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.class-card .swatch{
+  width:10px;height:34px;border-radius:3px;flex:0 0 auto;
+}
+.class-info{flex:1 1 auto;min-width:0;}
+.class-info .name{font-size:17px;color:var(--cream);line-height:1.1;}
+.class-info .meta{font-size:14px;color:var(--border-cyan);}
+.icon-btn{
+  flex:0 0 auto;
+  width:28px;height:28px;
+  border:2px solid var(--red-dark);
+  background:var(--red);
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1;
+}
+.empty-hint{
+  font-size:16px;
+  color:var(--border-cyan-soft);
+  text-align:center;
+  padding:22px 8px;
+  border:2px dashed var(--border-cyan-soft);
+  border-radius:6px;
+}
+
+/* ---- Tareas / Metas ---- */
+.task-card input[type=checkbox], .goal-card input[type=checkbox]{
+  width:20px;height:20px;
+  accent-color:var(--teal);
+  flex:0 0 auto;
+}
+.task-card .text, .goal-card .text{
+  flex:1 1 auto;
+  font-size:18px;
+  color:var(--cream);
+}
+.task-card.done .text, .goal-card.done .text{
+  text-decoration:line-through;
+  color:var(--border-cyan-soft);
+}
+.progress-bar{
+  height:16px;
+  border:2px solid var(--border-cyan-soft);
+  border-radius:8px;
+  background:var(--panel-blue-dark);
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.progress-bar .fill{
+  height:100%;
+  background:var(--teal);
+  width:0%;
+  transition:width .3s;
+}
+
+/* ---- Notas ---- */
+textarea#notesArea, textarea#planArea{
+  width:100%;
+  min-height:220px;
+  resize:vertical;
+  background:var(--panel-blue-dark);
+  border:2px solid var(--border-cyan-soft);
+  border-radius:6px;
+  color:var(--cream);
+  font-family:var(--font-body);
+  font-size:18px;
+  padding:10px;
+  line-height:1.4;
+}
+.save-status{
+  font-size:14px;
+  color:var(--teal);
+  margin-top:6px;
+  min-height:16px;
+}
+
+/* ---- Inline form ---- */
+.inline-form{
+  display:none;
+  gap:8px;
+  flex-wrap:wrap;
+  background:var(--panel-blue);
+  border:2px dashed var(--border-cyan-soft);
+  border-radius:6px;
+  padding:10px;
+  margin-bottom:10px;
+}
+.inline-form.show{display:flex;}
+.inline-form input, .inline-form select{
+  flex:1 1 120px;
+  font-family:var(--font-body);
+  font-size:16px;
+  padding:6px 8px;
+  border-radius:4px;
+  border:2px solid var(--border-cyan-soft);
+  background:var(--panel-blue-dark);
+  color:var(--cream);
+  min-width:0;
+}
+.inline-form .full{flex:1 1 100%;}
+.inline-form button{flex:0 0 auto;}
+
+/* ---------- ACTION BAR ---------- */
+.action-bar{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  padding:0 12px 14px;
+}
+.pill{
+  font-family:var(--font-body);
+  font-size:14px;
+  letter-spacing:.3px;
+  padding:9px 4px;
+  border-radius:16px;
+  cursor:pointer;
+  text-align:center;
+  border:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pill.orange{
+  background:var(--orange);
+  color:var(--orange-text);
+  box-shadow:inset -2px -3px 0 var(--orange-dark), inset 2px 2px 0 #ffd3ab;
+}
+.pill.teal{
+  background:var(--teal);
+  color:var(--teal-text);
+  box-shadow:inset -2px -3px 0 var(--teal-dark), inset 2px 2px 0 #a9e8d4;
+}
+.pill:active{filter:brightness(.88);}
+
+.footer-bar{
+  text-align:center;
+  font-size:13px;
+  color:var(--border-cyan-soft);
+  padding:10px 12px 12px;
+  border-top:2px dashed var(--border-cyan-soft);
+  margin-top:4px;
+  line-height:1.6;
+}
+.footer-bar .author-name{
+  color:var(--red-light);
+  font-weight:bold;
+}
+.footer-bar b{
+  color:var(--border-cyan);
+  letter-spacing:.5px;
+  font-size:11px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:480px){
+  .app-body{
+    flex-direction:column;
+    padding:10px;
+  }
+  .side-nav{
+    flex-direction:row;
+    flex:0 0 auto;
+    order:2;
+    justify-content:space-between;
+  }
+  .hex-btn{
+    flex:1 1 0;
+    width:auto;
+    clip-path:polygon(4% 0%, 96% 0%, 100% 30%, 96% 100%, 4% 100%, 0% 30%);
+  }
+  .avatar-hex{display:none;}
+  .screen{order:1;}
+  .action-bar{order:3; grid-template-columns:repeat(2,1fr); padding:0 10px 12px;}
+  .title{font-size:10px;}
+  .subtitle{font-size:14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="logo-hex">PC</div>
+    <div class="title-block">
+      <div class="title" id="headerTitle">Portal🥼 Adriana Barrios 💕</div>
+      <div class="subtitle" id="headerSubtitle">AGENDA ESTUDIANTIL</div>
+    </div>
+    <div class="week-ticks" id="weekTicks"></div>
+    <div class="badge-hex" id="pendingBadge">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="8" cy="9.5" rx="2.6" ry="3.2" fill="#eb9a5e" stroke="#3a2210" stroke-width="1"/>
+        <ellipse cx="8" cy="4.6" rx="1.7" ry="1.9" fill="#eb9a5e" stroke="#3a2210" stroke-width="1"/>
+        <g stroke="#5cd3f0" stroke-width="1" fill="none">
+          <line x1="6" y1="8" x2="1" y2="5.5"/>
+          <line x1="6" y1="9.5" x2="1" y2="9.5"/>
+          <line x1="6" y1="11" x2="1" y2="13.5"/>
+          <line x1="10" y1="8" x2="15" y2="5.5"/>
+          <line x1="10" y1="9.5" x2="15" y2="9.5"/>
+          <line x1="10" y1="11" x2="15" y2="13.5"/>
+        </g>
+      </svg>
+      <span class="dot" id="pendingDot">0</span>
+    </div>
+  </header>
+
+  <div class="semester-ruler">
+    <div class="label"><span id="weekLabel">SEMANA —/15</span><span id="weekDates">—</span></div>
+    <div class="ruler-ticks" id="rulerTicks"></div>
+  </div>
+
+  <div class="banner" id="banner">MENSAJE</div>
+
+  <div class="marquee-wrap">
+    <div class="marquee-track" id="marqueeTrack">Cargando...</div>
+  </div>
+
+  <div class="app-body">
+    <nav class="side-nav">
+      <button class="hex-btn" data-tab="horario">H<small>Horario</small></button>
+      <button class="hex-btn" data-tab="tareas">T<small>Tareas</small></button>
+      <button class="hex-btn" data-tab="plan">P<small>Plan</small></button>
+      <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
+      <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
+      <div class="avatar-hex">🕷️<br>A.1</div>
+    </nav>
+
+    <main class="screen">
+
+      <!-- HORARIO -->
+      <section class="tab-panel" id="tab-horario">
+        <div class="panel-title">HORARIO — CLASES</div>
+        <div class="day-row" id="dayRow"></div>
+
+        <div class="inline-form" id="formHorario">
+          <input type="text" id="claseName" placeholder="Materia" class="full">
+          <input type="time" id="claseStart">
+          <input type="time" id="claseEnd">
+          <input type="text" id="claseRoom" placeholder="Aula / lugar">
+          <select id="claseColor">
+            <option value="#e35b4f">Rojo</option>
+            <option value="#59c2a3">Verde</option>
+            <option value="#eb9a5e">Naranja</option>
+            <option value="#5cd3f0">Cian</option>
+            <option value="#f2c94c">Amarillo</option>
+          </select>
+          <button class="pill teal" id="saveClase">GUARDAR</button>
+        </div>
+
+        <div id="classList"></div>
+      </section>
+
+      <!-- TAREAS -->
+      <section class="tab-panel" id="tab-tareas">
+        <div class="panel-title">TAREAS PENDIENTES</div>
+
+        <div class="inline-form" id="formTarea">
+          <input type="text" id="tareaText" placeholder="Nueva tarea..." class="full">
+          <button class="pill teal" id="saveTarea">AÑADIR</button>
+        </div>
+
+        <div id="taskList"></div>
+      </section>
+
+      <!-- PLANEACIÓN SEMANAL -->
+      <section class="tab-panel" id="tab-plan">
+        <div class="panel-title">PLANEACIÓN POR MATERIA</div>
+        <div class="day-row" id="subjectRow"></div>
+        <div class="day-row" id="planWeekNav" style="align-items:center;"></div>
+        <textarea id="planArea" placeholder="Qué debe estar sucediendo esta semana en esta materia..."></textarea>
+        <div class="save-status" id="planSaveStatus"></div>
+      </section>
+
+      <!-- NOTAS -->
+      <section class="tab-panel" id="tab-notas">
+        <div class="panel-title">BITÁCORA / NOTAS</div>
+        <textarea id="notesArea" placeholder="Escribe tus apuntes aquí..."></textarea>
+        <div class="save-status" id="saveStatus"></div>
+      </section>
+
+      <!-- METAS -->
+      <section class="tab-panel" id="tab-metas">
+        <div class="panel-title">METAS DE LA SEMANA</div>
+        <div class="progress-bar"><div class="fill" id="goalsFill"></div></div>
+
+        <div class="inline-form" id="formMeta">
+          <input type="text" id="metaText" placeholder="Nueva meta..." class="full">
+          <button class="pill teal" id="saveMeta">AÑADIR</button>
+        </div>
+
+        <div id="goalList"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="action-bar" id="actionBar"></div>
+
+  <footer class="footer-bar">
+    <div>Diseñado y desarrollado por 💕: <span class="author-name">M.C. Adriana Alicia Barrios Rodríguez</span></div>
+    <div><b>EDTECH &amp; BIOMEDICAL LEARNING SYSTEMS</b></div>
+  </footer>
+</div>
+
+<script>
+/* ===================== ESTADO / STORAGE ===================== */
+const DAYS = ["lun","mar","mie","jue","vie","sab","dom"];
+const DAY_LABELS = {lun:"LUN",mar:"MAR",mie:"MIÉ",jue:"JUE",vie:"VIE",sab:"SÁB",dom:"DOM"};
+
+function load(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function save(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+const SUBJECTS = ["Histología Humana","Fisiopatología","Patología Clínica II"];
+
+const WELCOME_QUOTES = [
+  "Un gran poder de la palabra conlleva una gran responsabilidad: la de recordar que un elogio a tiempo puede impulsar una carrera entera, mientras que una crítica destructiva puede apagar un talento para siempre.",
+  "Un gran poder del conocimiento conlleva una gran responsabilidad: la de no usar el saber como un arma de autoridad para imponer verdades, sino como una herramienta compartida para despertar la curiosidad del alumno.",
+  "Un gran poder de la atención conlleva una gran responsabilidad: la de aprender a mirar más allá de las calificaciones de un examen para descubrir el potencial oculto, el miedo o el talento que el estudiante no sabe expresar.",
+  "Un gran poder de la empatía conlleva una gran responsabilidad: la de validar el mundo emocional del alumno, entendiendo que nadie puede aprender ni concentrarse si su mente y su corazón están librando una batalla en silencio.",
+  "Un gran poder del ejemplo conlleva una gran responsabilidad: la de saber que tus estudiantes olvidarán muchas de tus lecciones teóricas, pero jamás olvidarán cómo te comportabas, cómo gestionabas la frustración y cómo los tratabas.",
+  "Un gran poder de la creatividad conlleva una gran responsabilidad: la de romper con la monotonía del aula para transformar los temas más densos en experiencias vivas, demostrando que el aprendizaje puede ser una aventura.",
+  "Un gran poder de la paciencia conlleva una gran responsabilidad: la de respetar el ritmo de aprendizaje de cada individuo, entendiendo que las mentes más brillantes a veces necesitan un poco más de tiempo para florecer."
+];
+
+function renderMarquee(){
+  const track = document.getElementById('marqueeTrack');
+  const quote = WELCOME_QUOTES[Math.floor(Math.random()*WELCOME_QUOTES.length)];
+  track.innerHTML = '<b>Bienvenida Adriana,</b> ' + escapeHtml(quote) + '\u00A0\u00A0\u00A0\u00A0🕷️\u00A0\u00A0\u00A0\u00A0';
+  // velocidad lenta y constante, sin importar el largo del texto
+  requestAnimationFrame(()=>{
+    const width = track.scrollWidth;
+    const speed = 32; // px por segundo (más lento = más fácil de leer)
+    const duration = Math.max(22, width / speed);
+    track.style.animationDuration = duration + 's';
+  });
+}
+
+document.getElementById('marqueeTrack').addEventListener('click', function(){
+  this.classList.toggle('paused');
+});
+
+const DEFAULT_SCHEDULE = {
+  lun:[
+    {id:1001,name:"Fisiopatología",start:"08:50",end:"10:40",room:"Grupo 2-1",color:"#59c2a3"},
+    {id:1002,name:"Patología Clínica II",start:"07:00",end:"08:50",room:"Grupo 5-1",color:"#eb9a5e"},
+    {id:1003,name:"Patología Clínica II",start:"10:40",end:"12:30",room:"Grupo 5-2",color:"#f2c94c"}
+  ],
+  mar:[
+    {id:1004,name:"Histología Humana",start:"10:40",end:"12:30",room:"Grupo 2-1",color:"#e35b4f"},
+    {id:1005,name:"Fisiopatología",start:"08:50",end:"10:40",room:"Grupo 2-2",color:"#5cd3f0"}
+  ],
+  mie:[
+    {id:1006,name:"Histología Humana",start:"10:40",end:"11:35",room:"Grupo 2-1",color:"#e35b4f"},
+    {id:1007,name:"Fisiopatología",start:"08:50",end:"09:45",room:"Grupo 2-1",color:"#59c2a3"},
+    {id:1008,name:"Fisiopatología",start:"11:35",end:"12:30",room:"Grupo 2-2",color:"#5cd3f0"},
+    {id:1009,name:"Patología Clínica II",start:"07:55",end:"08:50",room:"Grupo 5-1",color:"#eb9a5e"},
+    {id:1010,name:"Patología Clínica II",start:"09:45",end:"10:40",room:"Grupo 5-2",color:"#f2c94c"}
+  ],
+  jue:[
+    {id:1011,name:"Histología Humana",start:"09:45",end:"10:40",room:"Grupo 2-1",color:"#e35b4f"},
+    {id:1012,name:"Fisiopatología",start:"08:50",end:"09:45",room:"Grupo 2-1",color:"#59c2a3"},
+    {id:1013,name:"Fisiopatología",start:"10:40",end:"11:35",room:"Grupo 2-2",color:"#5cd3f0"},
+    {id:1014,name:"Patología Clínica II",start:"07:00",end:"08:50",room:"Grupo 5-1",color:"#eb9a5e"},
+    {id:1015,name:"Patología Clínica II",start:"11:35",end:"12:30",room:"Grupo 5-2",color:"#f2c94c"}
+  ],
+  vie:[
+    {id:1016,name:"Histología Humana",start:"09:45",end:"10:40",room:"Grupo 2-1",color:"#e35b4f"},
+    {id:1017,name:"Fisiopatología",start:"08:50",end:"09:45",room:"Grupo 2-1",color:"#59c2a3"},
+    {id:1018,name:"Fisiopatología",start:"10:40",end:"11:35",room:"Grupo 2-2",color:"#5cd3f0"},
+    {id:1019,name:"Patología Clínica II",start:"07:00",end:"08:50",room:"Grupo 5-1",color:"#eb9a5e"},
+    {id:1020,name:"Patología Clínica II",start:"11:35",end:"12:30",room:"Grupo 5-2",color:"#f2c94c"}
+  ],
+  sab:[], dom:[]
+};
+
+const DEFAULT_PLANS = {
+  "Fisiopatología": {
+    "1": "Encuadre de la materia + Unidad I · Tema 1. Introducción a la Fisiopatología desde la Perspectiva Biomédica (ciclo corto)\n\n▸ Sesión 1 (Encuadre general de la materia (obligatorio))\nPresentación de la asignatura: propósito, competencia específica (CE2) y genérica (CG9), mapa de las 5 unidades. Revisión conjunta del programa: evaluación en fase parcial (50%: actividades 20% · prácticas 20% · cuestionarios 10%) y fase final (50%: valoración práctica 30% · proyecto final 20%), criterios de acreditación, política de asistencia (80%). Normas de convivencia y expectativas del modelo MPS (por qué no es aula invertida). Espacio de preguntas.\nEvidencia: Encuadre firmado / acuse\n\n▸ Sesión 2 (Encuadre tecnológico y andamiaje digital (obligatorio))\nAlta y exploración guiada del Aula Virtual UAS: ubicación de la antología, SCORM de práctica y bitácoras. Recorrido por las herramientas del curso (Genially, Quizizz/Nearpod/Mentimeter, simuladores fisiopatológicos). Prueba en vivo: cada estudiante entrega una tarea de ejemplo y resuelve un SCORM de prueba para verificar acceso antes de que cuente para calificación.\nEvidencia: Checklist de acceso verificado\n\n▸ Sesión 3 (Sesión 1 — Tema 1 (microlección + práctica activa))\nPreguntas detonadoras (\"¿por qué dos personas expuestas al mismo virus no siempre enferman igual?\"). Microlección: concepto de fisiopatología, salud-enfermedad, etiología vs. patogénesis, síntoma-signo-síndrome. Actividad en equipos: clasificar hallazgos de un caso breve en etiología, patogénesis y manifestación clínica.\nEvidencia: Tabla completada\n\n▸ Sesión 4 (Sesión 2 — Tema 1 (profundización + síntesis))\nMicrolección: medicina basada en la evidencia y el lugar de la fisiopatología en la investigación biomédica. Mini-quiz con tarjetas de respuesta (8–10 reactivos del banco, Tema 1). Retroalimentación inmediata. Conexión: \"la próxima semana veremos qué le pasa exactamente a una célula cuando se lesiona\".\nEvidencia: Mini-quiz",
+    "2": "Unidad I · Tema 2. Bases Celulares y Moleculares de la Enfermedad (ciclo completo)\n\n▸ Sesión 1 (Apertura: microlección + activación)\nMicrolección: homeostasis y desequilibrios, agentes lesivos, mecanismos de lesión celular. Actividad: clasificar 5 agentes lesivos (hipoxia, tóxicos, agentes físicos, infecciosos, inmunológicos) según su mecanismo de daño predominante.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Profundización I: aprendizaje activo aplicado)\nTrabajo en equipos: diferenciar necrosis coagulativa de necrosis licuefactiva y apoptosis en distintos escenarios clínicos, consultando la antología en el momento.\nEvidencia: Cuadro comparativo\n\n▸ Sesión 3 (Profundización II: práctica o problema complejo)\nCaso integrador: mecanismos celulares de adaptación (hipertrofia, atrofia, hiperplasia, metaplasia) — cada equipo identifica el mecanismo presente en un órgano distinto y su relevancia clínica.\nEvidencia: Resolución de caso\n\n▸ Sesión 4 (Síntesis y cierre)\nMini-quiz Tema 2. Retroalimentación. Cierre de la Unidad I con mapa conceptual breve.\nEvidencia: Mini-quiz + mapa",
+    "3": "Unidad II · Tema 3. Estudio General por Órganos y Sistemas + Tema 4. Identificación de Marcadores y Procesos Específicos (2 × ciclo corto)\n\n▸ Sesión 1 (Sesión 1 — Tema 3)\nMicrolección: reserva funcional, compensación/descompensación, disfunción primaria/secundaria, método general de 5 pasos. Actividad: aplicar el método de 5 pasos a un órgano elegido por el equipo.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Sesión 2 — Tema 3 (síntesis))\nCaso breve: paciente con reserva funcional agotada — identificar en qué momento pasó de compensación a descompensación. Mini-quiz Tema 3.\nEvidencia: Mini-quiz\n\n▸ Sesión 3 (Sesión 1 — Tema 4)\nMicrolección: tipos de biomarcadores (diagnóstico, pronóstico, predictivo, monitoreo, riesgo), sensibilidad/especificidad. Actividad: clasificar 5 biomarcadores conocidos según su tipo.\nEvidencia: Cierre parcial\n\n▸ Sesión 4 (Sesión 2 — Tema 4 (síntesis))\nCaso breve: proceso de validación de un biomarcador nuevo (descubrimiento → analítica → clínica → utilidad). Mini-quiz combinado Temas 3–4.\nEvidencia: Mini-quiz",
+    "4": "Unidad III · Tema 5. Patología Inmunológica e Inflamatoria (ciclo completo)\n\n▸ Sesión 1 (Apertura: microlección + activación)\nMicrolección: inflamación aguda vs. crónica, mediadores químicos, signos cardinales. Actividad: relacionar cada signo cardinal con su mecanismo (rubor/calor con vasodilatación, dolor con mediadores químicos, etc.).\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Profundización I: aprendizaje activo aplicado)\nTrabajo en equipos: los cuatro tipos de hipersensibilidad (I–IV) con un ejemplo clínico cada uno, consultando la antología en el momento.\nEvidencia: Cuadro comparativo\n\n▸ Sesión 3 (Profundización II: práctica o problema complejo)\nCaso integrador de autoinmunidad (artritis reumatoide): interpretar leucocitosis, PCR/VSG y autoanticuerpos en conjunto.\nEvidencia: Resolución de caso\n\n▸ Sesión 4 (Síntesis y cierre)\nMini-quiz Tema 5. Cierre de la introducción a la Unidad III — conexión con las enfermedades específicas de las siguientes semanas.\nEvidencia: Mini-quiz",
+    "5": "Unidad III · Tema 6. Enfermedades Infecciosas + Tema 7. Enfermedades Metabólicas y Nutricionales (2 × ciclo corto)\n\n▸ Sesión 1 (Sesión 1 — Tema 6)\nMicrolección: cadena de infección, mecanismos de daño según el tipo de agente (bacteria, virus, hongo, parásito). Actividad: caso de neumonía bacteriana — interpretar neutrofilia y procalcitonina elevada.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Sesión 2 — Tema 6 (síntesis))\nTinción de Gram y antibiograma: su papel en la elección del tratamiento. Mini-quiz Tema 6.\nEvidencia: Mini-quiz\n\n▸ Sesión 3 (Sesión 1 — Tema 7)\nMicrolección: resistencia a la insulina, tejido adiposo como órgano inflamatorio, síndrome metabólico, aterosclerosis. Actividad: caso de infarto por aterosclerosis — reconstruir la secuencia de daño endotelial → placa → ruptura.\nEvidencia: Cierre parcial\n\n▸ Sesión 4 (Sesión 2 — Tema 7 (síntesis))\nComplicaciones microvasculares de la diabetes (retinopatía, nefropatía, neuropatía). Mini-quiz combinado Temas 6–7.\nEvidencia: Mini-quiz",
+    "6": "Unidad III · Tema 8. Enfermedades Neurológicas + Tema 9. Enfermedades Oncológicas (2 × ciclo corto)\n\n▸ Sesión 1 (Sesión 1 — Tema 8)\nMicrolección: vulnerabilidad neuronal a la isquemia, barrera hematoencefálica, ictus isquémico vs. hemorrágico, penumbra isquémica. Actividad: caso de ictus — identificar la ventana terapéutica.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Sesión 2 — Tema 8 (síntesis))\nNeurodegeneración: beta-amiloide/tau (Alzheimer) vs. alfa-sinucleína (Parkinson). Mini-quiz Tema 8.\nEvidencia: Mini-quiz\n\n▸ Sesión 3 (Sesión 1 — Tema 9)\nMicrolección: neoplasia vs. hiperplasia, oncogenes y genes supresores de tumores, características distintivas del cáncer. Actividad: caso de cáncer de mama con HER2 positivo — relacionar el marcador con el tratamiento dirigido.\nEvidencia: Cierre parcial\n\n▸ Sesión 4 (Sesión 2 — Tema 9 (síntesis))\nMarcadores tumorales (PSA, CA-125, HER2) y su uso clínico. Mini-quiz combinado Temas 8–9. Cierre de la Unidad III.\nEvidencia: Mini-quiz",
+    "7": "Unidad IV · Tema 10. Fisiopatología en la Evaluación Clínica y Diagnóstica + Tema 11. Fisiopatología y Terapéutica Basada en Evidencia (2 × ciclo corto)\n\n▸ Sesión 1 (Sesión 1 — Tema 10)\nMicrolección: diagnóstico diferencial, probabilidad pre-prueba, sensibilidad/especificidad aplicadas, fases preanalítica/analítica/postanalítica. Actividad: construir el diagnóstico diferencial de un síntoma inespecífico.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Sesión 2 — Tema 10 (síntesis))\nCaso breve de validación de un biomarcador en investigación. Mini-quiz Tema 10.\nEvidencia: Mini-quiz\n\n▸ Sesión 3 (Sesión 1 — Tema 11)\nMicrolección: tratamiento etiológico/patogénico/de soporte, fases de los estudios clínicos (I–IV), farmacovigilancia. Actividad: clasificar 4 tratamientos conocidos según su nivel de acción.\nEvidencia: Cierre parcial\n\n▸ Sesión 4 (Sesión 2 — Tema 11 (síntesis))\nResistencia bacteriana y resistencia tumoral como fenómenos análogos. Mini-quiz combinado Temas 10–11.\nEvidencia: Mini-quiz",
+    "8": "Unidad IV · Tema 12. Prevención y Promoción de la Salud: Factores de Riesgo (ciclo completo)\n\n▸ Sesión 1 (Apertura: microlección + activación)\nMicrolección: niveles de prevención (primaria, secundaria, terciaria), factores de riesgo modificables/no modificables. Actividad: clasificar los factores de riesgo de un caso comunitario.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Profundización I: aprendizaje activo aplicado)\nDiseño en equipos de una estrategia de prevención secundaria (tamizaje) para una enfermedad crónica prevalente en el entorno, consultando la antología.\nEvidencia: Propuesta de tamizaje\n\n▸ Sesión 3 (Profundización II: práctica o problema complejo)\nConcepto de ventana de oportunidad: relación con la reserva funcional (Unidad II) y con la penumbra isquémica (Tema 8) — seminario breve de conexión entre unidades.\nEvidencia: Seminario\n\n▸ Sesión 4 (Síntesis y cierre)\nMini-quiz Tema 12. Cierre de la Unidad IV.\nEvidencia: Mini-quiz",
+    "9": "Unidad V · Tema 13. Epigenética y Enfermedad; Microbiota y Salud + Tema 14. Biomarcadores y Medicina Personalizada; Células Madre (2 × ciclo corto)\n\n▸ Sesión 1 (Sesión 1 — Tema 13)\nMicrolección: metilación del ADN, modificación de histonas, programación fetal, microbiota y disbiosis. Actividad: caso de exposición ambiental temprana — explicar el efecto epigenético.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Sesión 2 — Tema 13 (síntesis))\nDisbiosis y su relación con la inflamación crónica de bajo grado. Mini-quiz Tema 13.\nEvidencia: Mini-quiz\n\n▸ Sesión 3 (Sesión 1 — Tema 14)\nMicrolección: farmacogenómica, tejidos lábiles/estables/permanentes, células madre (autorrenovación y diferenciación), trasplante de médula ósea. Actividad: caso de trasplante de células madre hematopoyéticas.\nEvidencia: Cierre parcial\n\n▸ Sesión 4 (Sesión 2 — Tema 14 (síntesis))\nMedicina personalizada: cómo el mismo diagnóstico puede requerir tratamientos distintos según el paciente. Mini-quiz combinado Temas 13–14.\nEvidencia: Mini-quiz",
+    "10": "Unidad V · Tema 15. Inflamación Crónica y Enfermedades; Neurodegeneración y Plasticidad Neuronal; Envejecimiento (ciclo completo — cierre del bloque teórico)\n\n▸ Sesión 1 (Apertura: microlección + activación)\nMicrolección: senescencia celular, fenotipo secretor asociado a senescencia (SASP), inflammaging. Actividad: relacionar el envejecimiento con la reducción de reserva funcional vista en la Unidad II.\nEvidencia: Cierre parcial\n\n▸ Sesión 2 (Profundización I: aprendizaje activo aplicado)\nCaso integrador de una persona mayor con múltiples comorbilidades: identificar los mecanismos de las 5 unidades presentes simultáneamente.\nEvidencia: Análisis de caso\n\n▸ Sesión 3 (Profundización II: práctica o problema complejo)\nSeminario: plasticidad neuronal como mecanismo compensador parcial de la neurodegeneración; fármacos senolíticos en investigación.\nEvidencia: Seminario\n\n▸ Sesión 4 (Síntesis y cierre)\nMini-quiz Tema 15. Evaluación sumativa de cierre del bloque teórico. Reflexión metacognitiva: ¿qué mecanismo se repitió con más frecuencia a lo largo del curso? (inflamación crónica de bajo grado).\nEvidencia: Mini-quiz + evaluación sumativa",
+    "11": "Colchón UAS\n\nSi no se usa, puede usarse para:\n• Seminario de casos clínicos\n• Asesoría del proyecto final\n• Regularización de temas con menor dominio",
+    "12": "Laboratorio: Bioseguridad y técnicas básicas de laboratorio\n\n▸ Sesión 1 (Práctica guiada)\nBioseguridad en el laboratorio clínico: manejo correcto de muestras y equipo de protección personal.\nEvidencia: Bitácora de prácticas\n\n▸ Sesión 2 (Práctica guiada)\nIntroducción práctica a biomarcadores: toma de una muestra y su procesamiento básico.\nEvidencia: Bitácora de prácticas\n\n▸ Sesión 3 (Práctica guiada)\nInterpretación guiada de un resultado de laboratorio real, aplicando el razonamiento fisiopatológico.\nEvidencia: Bitácora de prácticas\n\n▸ Sesión 4 (Cierre de práctica)\nEntrega y retroalimentación de la bitácora de prácticas.\nEvidencia: Bitácora (entrega)",
+    "13": "Laboratorio: Casos clínicos integradores\n\n▸ Sesión 1 (Práctica guiada)\nCaso clínico integrador — Unidad III (inflamatorio/infeccioso/metabólico).\nEvidencia: Cuaderno de interpretación clínica\n\n▸ Sesión 2 (Práctica guiada)\nCaso clínico integrador — Unidad III (neurológico/oncológico).\nEvidencia: Cuaderno de interpretación clínica\n\n▸ Sesión 3 (Práctica guiada)\nCaso clínico integrador — Unidad V (envejecimiento y comorbilidad múltiple).\nEvidencia: Cuaderno de interpretación clínica\n\n▸ Sesión 4 (Cierre de práctica)\nIntegración y entrega del cuaderno de interpretación clínica.\nEvidencia: Cuaderno (entrega)",
+    "14": "Cierre\n\n▸ Semana 14 (Presentación del proyecto final)\nExposición del proyecto final (análisis crítico y argumentación) por equipos; coevaluación entre pares con rúbrica.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Autoevaluación y cierre)\nAutoevaluación de desempeño, reflexión sobre la transferencia del aprendizaje a la práctica profesional, cierre oficial del curso.\nEvidencia: Reflexión final",
+    "15": "Cierre\n\n▸ Semana 14 (Presentación del proyecto final)\nExposición del proyecto final (análisis crítico y argumentación) por equipos; coevaluación entre pares con rúbrica.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Autoevaluación y cierre)\nAutoevaluación de desempeño, reflexión sobre la transferencia del aprendizaje a la práctica profesional, cierre oficial del curso.\nEvidencia: Reflexión final"
+  },
+  "Histología Humana": {
+    "1": "Encuadre de la materia + Unidad I · Tema 1. Introducción a la histología biomédica (ciclo corto)\n\n▸ Martes (Encuadre general de la materia (obligatorio))\nPresentación de la asignatura: propósito, competencias a las que aporta, mapa de las 4 unidades y su relación con materias antecedentes/posteriores. Revisión conjunta del programa: ponderación (30% producto integrador · 30% actividades · 10% cuestionarios · 10% prácticas · 20% socialización), criterios de acreditación, política de asistencia (80%) y del ABProyectos. Normas de convivencia y expectativas del modelo MPS (por qué no es aula invertida). Espacio de preguntas.\nEvidencia: Encuadre firmado / acuse\n\n▸ Miércoles (Encuadre tecnológico y andamiaje digital (obligatorio))\nAlta y exploración guiada del Aula Virtual UAS: dónde están la antología, los SCORM de práctica y las bitácoras. Recorrido por las herramientas que se usarán en el curso (Genially, Canva, Quizizz/Nearpod/Mentimeter, simuladores de microscopía y bancos de imágenes histológicas). Prueba en vivo: cada estudiante entrega una tarea de ejemplo y resuelve un SCORM de prueba para verificar acceso antes de que cuente para calificación.\nEvidencia: Checklist de acceso verificado\n\n▸ Jueves (Sesión 1 — Tema 1 (microlección + práctica activa))\nPreguntas detonadoras (\"¿por qué una célula intestinal se ve distinta a una muscular si comparten el mismo ADN?\"). Microlección: relación estructura-función, especializaciones de membrana (microvellosidades, cilios, uniones). Actividad en equipos: clasificar 6 imágenes de estructuras celulares según su función probable (\"detective de estructuras\") y completar una tabla estructura → función → ejemplo de tejido.\nEvidencia: Tabla completada\n\n▸ Viernes (Sesión 2 — Tema 1 (profundización + síntesis))\nCaso breve de citodiferenciación y aplicaciones biotecnológicas (scaffolds, cultivos 3D, organoides). Mini-quiz con tarjetas de respuesta (8–10 reactivos del banco, Tema 1). Retroalimentación inmediata. Conexión: \"la próxima semana veremos las herramientas que permiten observar todo esto\".\nEvidencia: Mini-quiz",
+    "2": "Unidad I · Tema 2. Microscopía + Tema 3. Técnicas histológicas (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Tema 2)\nMicrolección: campo claro, microscopía digital/virtual (WSI), telepatología, MET vs. MEB. Actividad: estación rotativa comparando la misma estructura vista por distintas técnicas; deciden qué técnica usarían para responder preguntas biomédicas concretas.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Tema 2 (síntesis))\nEstrategia sistemática de interpretación de imagen (contexto → aumento → estructura-función → artefactos) aplicada a 3 imágenes reales. Mini-quiz Tema 2.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Tema 3)\nMicrolección: fijación (formalina 10:1), inclusión en parafina, corte (3–5 µm), congelación/criostato, H&E y tinciones especiales (PAS, Masson, Giemsa), IHQ/IF. Actividad: ordenar tarjetas con los pasos del procesamiento de una muestra.\nEvidencia: Secuencia ordenada\n\n▸ Viernes (Sesión 2 — Tema 3 (síntesis))\nCaso integrador: biopsia renal con sospecha de nefropatía autoinmune (por qué una porción se congela para inmunofluorescencia directa en lugar de fijarse). Mini-quiz combinado Temas 2–3.\nEvidencia: Mini-quiz",
+    "3": "Unidad II · Tejido epitelial + Tejido conectivo (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Epitelial)\nMicrolección: clasificación de epitelios, especializaciones de superficie, uniones intercelulares, tipos de secreción glandular (merocrina/apocrina/holocrina). Actividad: identificación guiada de 4–5 tipos de epitelio en imágenes, correlacionando con función y ubicación.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Epitelial (síntesis))\nCaso breve: la mayoría de los carcinomas se originan en tejido epitelial — ¿por qué? Mini-quiz Tema epitelial.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Conectivo)\nMicrolección: fibroblasto, macrófago, mastocito; fibras colágenas/reticulares/elásticas; conectivo laxo vs. denso. Actividad: comparación microscópica de conectivo laxo, denso regular e irregular.\nEvidencia: Cuadro comparativo\n\n▸ Viernes (Sesión 2 — Conectivo (síntesis))\nCaso breve de cicatrización anómala (queloide): ¿qué falla en la remodelación de colágeno? Mini-quiz combinado epitelial + conectivo.\nEvidencia: Mini-quiz",
+    "4": "Unidad II · Tejido muscular + Tejido nervioso (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Muscular)\nMicrolección: los tres tipos de músculo, disco intercalado (sincitio funcional), célula satélite. Actividad: comparación microscópica de músculo esquelético, cardíaco y liso.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Muscular (síntesis))\nCaso breve: infarto de miocardio — ¿por qué se forma cicatriz fibrosa y no tejido muscular nuevo? Mini-quiz Tema muscular.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Nervioso)\nMicrolección: neurona/neuroglía, mielinización SNC (oligodendrocito) vs. SNP (célula de Schwann), barrera hematoencefálica. Actividad: diagrama comparativo + caso de lesión nerviosa periférica (degeneración walleriana, bandas de Büngner).\nEvidencia: Diagrama\n\n▸ Viernes (Sesión 2 — Nervioso (síntesis))\nMini-quiz combinado muscular + nervioso. Conexión con la semana siguiente: cuando estos tejidos fallan, ¿cómo responde el organismo?\nEvidencia: Mini-quiz",
+    "5": "Unidad II · Tema 5. Integración biomédica: inflamación, cicatrización y fibrosis (ciclo completo)\n\n▸ Martes (Apertura: microlección + activación)\nMicrolección: fases de la inflamación aguda/crónica y de la cicatrización (hemostasia → proliferación → remodelación). Actividad: ordenar con tarjetas la secuencia correcta de cicatrización.\nEvidencia: Secuencia ordenada\n\n▸ Miércoles (Profundización I: aprendizaje activo aplicado)\nCaso de úlcera crónica del pie diabético: identificar en qué fase de la cicatrización está \"atorado\" el proceso, consultando la antología en el momento.\nEvidencia: Diagnóstico de caso\n\n▸ Jueves (Profundización II: práctica o problema complejo)\nJigsaw: el papel del miofibroblasto y TGF-β en la fibrosis; cada equipo relaciona el mecanismo con un órgano distinto, anticipando la Unidad IV (pulmón, riñón, hígado).\nEvidencia: Mapa por equipo\n\n▸ Viernes (Síntesis y cierre)\nMini-quiz Tema 5. Cierre de Unidad II con mapa conceptual integrador de los cuatro tejidos básicos y su relación con la reparación tisular.\nEvidencia: Mapa conceptual + mini-quiz",
+    "6": "Unidad III · Tejido sanguíneo y hematopoyesis + Sistema inmune y órganos linfoides (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Sangre)\nMicrolección: elementos formes de la sangre, hematopoyesis, médula ósea roja/amarilla. Actividad: identificación de células sanguíneas en imágenes de frotis + caso de pancitopenia (¿qué línea celular falla?).\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Sangre (síntesis))\nMini-quiz Tema sangre/hematopoyesis.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Inmune/linfoide)\nMicrolección: timo, ganglio linfático, bazo, MALT. Actividad: comparación de arquitectura ganglionar normal vs. hiperplasia reactiva vs. linfoma en imágenes.\nEvidencia: Comparación guiada\n\n▸ Viernes (Sesión 2 — Inmune/linfoide (síntesis))\nMini-quiz combinado sangre + inmune/linfoide.\nEvidencia: Mini-quiz",
+    "7": "Unidad III · Sistema cardiovascular + Integración biomédica: respuesta inmune y biomarcadores (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Cardiovascular)\nMicrolección: capas de la pared vascular, tipos de vasos, corazón. Actividad: identificar el tipo de vaso según las capas visibles en una imagen + caso de fístula arteriovenosa (arterialización de la vena).\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Cardiovascular (síntesis))\nMini-quiz Tema cardiovascular.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Integración biomédica)\nMicrolección: cascada de adhesión leucocitaria (rodamiento-adhesión-diapédesis), granuloma, marcadores CD (CD3, CD20). Actividad: caso de linfoma con panel de inmunohistoquímica — \"detective molecular\" (CD20+/CD3−).\nEvidencia: Resolución de caso\n\n▸ Viernes (Sesión 2 — Integración biomédica (síntesis))\nMini-quiz combinado. Cierre de Unidad III.\nEvidencia: Mini-quiz",
+    "8": "Unidad IV · Sistema respiratorio + Sistema digestivo (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Respiratorio)\nMicrolección: vías de conducción, barrera alveolo-capilar, surfactante. Actividad: identificar neumocitos tipo I vs. tipo II en imagen + caso de enfermedad de membrana hialina del recién nacido pretérmino.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Respiratorio (síntesis))\nMini-quiz Tema respiratorio.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Digestivo)\nMicrolección: capas del tubo digestivo, lobulillo hepático y tríada portal, páncreas exocrino. Actividad: reconocimiento de estructura hepática + caso de enfermedad celíaca (atrofia vellositaria).\nEvidencia: Reconocimiento guiado\n\n▸ Viernes (Sesión 2 — Digestivo (síntesis))\nMini-quiz combinado respiratorio + digestivo.\nEvidencia: Mini-quiz",
+    "9": "Unidad IV · Sistema endocrino + Sistema urinario (2 × ciclo corto)\n\n▸ Martes (Sesión 1 — Endocrino)\nMicrolección: hipófisis, tiroides, suprarrenal, islotes de Langerhans. Actividad: estaciones de identificación de glándulas endocrinas + caso de prolactinoma (positividad a prolactina en IHQ).\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Endocrino (síntesis))\nMini-quiz Tema endocrino.\nEvidencia: Mini-quiz\n\n▸ Jueves (Sesión 1 — Urinario)\nMicrolección: nefrona, barrera de filtración glomerular, segmentos tubulares. Actividad: diagrama de la nefrona con la función de cada segmento + caso de glomerulopatía (borramiento de pedicelos).\nEvidencia: Diagrama funcional\n\n▸ Viernes (Sesión 2 — Urinario (síntesis))\nMini-quiz combinado endocrino + urinario.\nEvidencia: Mini-quiz",
+    "10": "Unidad IV · Tema 5. Integración biomédica: diabetes, enfermedad renal, respiratoria y hepática (ciclo completo)\n\n▸ Martes (Apertura: microlección + activación)\nMicrolección: cómo la diabetes afecta simultáneamente varios órganos (microangiopatía, nefropatía, fibrosis). Preguntas detonadoras conectando con lo visto en las semanas 5, 8 y 9.\nEvidencia: Cierre oral\n\n▸ Miércoles (Profundización I: aprendizaje activo aplicado)\nCaso integrador multiorgánico: paciente con diabetes de larga evolución y afectación renal, pulmonar y hepática simultánea. Análisis en equipos con la antología como consulta.\nEvidencia: Análisis de caso\n\n▸ Jueves (Profundización II: práctica o problema complejo)\nSeminario de correlación estructura-función-enfermedad que conecta todo lo visto en la Unidad IV (respiratorio, digestivo, endocrino, urinario).\nEvidencia: Seminario\n\n▸ Viernes (Síntesis y cierre)\nMini-quiz final de la unidad. Evaluación sumativa de cierre del bloque teórico. Reflexión metacognitiva: ¿qué principio se repitió más veces a lo largo del curso? (relación estructura-función).\nEvidencia: Mini-quiz + reflexión",
+    "11": "Colchón UAS\n\nSi no se usa, puede usarse para:\n• Seminario clínico-histológico\n• Práctica de microscopía virtual\n• Regularización / asesoría de avance del ABProyectos",
+    "12": "Laboratorio: Reconocimiento de tejidos básicos y técnicas histológicas\n\n▸ Martes (Práctica guiada)\nManejo del microscopio óptico; reconocimiento de tejido epitelial y conectivo en laminillas.\nEvidencia: Bitácora\n\n▸ Miércoles (Práctica guiada)\nReconocimiento de tejido muscular y nervioso en laminillas; comparación con microscopía virtual.\nEvidencia: Bitácora\n\n▸ Jueves (Práctica guiada)\nCorrelación de imágenes propias con láminas del atlas histológico; identificación de artefactos de procesamiento.\nEvidencia: Bitácora\n\n▸ Viernes (Cierre de práctica)\nEntrega y retroalimentación de la bitácora ilustrada de tejidos (producto de la semana).\nEvidencia: Bitácora ilustrada (entrega)",
+    "13": "Laboratorio: Histología de órganos y correlación diagnóstica\n\n▸ Martes (Práctica guiada)\nEstaciones: sangre y médula ósea, órganos linfoides.\nEvidencia: Cuaderno digital\n\n▸ Miércoles (Práctica guiada)\nEstaciones: sistema cardiovascular, sistema respiratorio.\nEvidencia: Cuaderno digital\n\n▸ Jueves (Práctica guiada)\nEstaciones: sistema digestivo, sistema endocrino.\nEvidencia: Cuaderno digital\n\n▸ Viernes (Cierre de práctica)\nEstación final: sistema urinario. Integración y entrega del cuaderno digital de correlación histológica.\nEvidencia: Cuaderno digital (entrega)",
+    "14": "Cierre\n\n▸ Semana 14 (Socialización ABProyectos (Grupo A))\nPresentaciones finales del proyecto integrador; coevaluación y diálogo académico entre equipos.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Socialización ABProyectos (Grupo B) + Metacognición)\nPresentaciones finales restantes; reflexión crítica del aprendizaje del semestre; cierre oficial del curso.\nEvidencia: Reflexión final",
+    "15": "Cierre\n\n▸ Semana 14 (Socialización ABProyectos (Grupo A))\nPresentaciones finales del proyecto integrador; coevaluación y diálogo académico entre equipos.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Socialización ABProyectos (Grupo B) + Metacognición)\nPresentaciones finales restantes; reflexión crítica del aprendizaje del semestre; cierre oficial del curso.\nEvidencia: Reflexión final"
+  },
+  "Patología Clínica II": {
+    "1": "Encuadre tecnopedagógico (1 día) + Unidad 1 · Tema 1. Alcance + Tema 2. Etiología + Tema 3. Patogénesis (ciclo trío compacto)\n\n▸ Lunes (Encuadre tecnopedagógico (obligatorio))\nComo el grupo ya conoce la mecánica de trabajo de la docente, esta sesión se enfoca exclusivamente en la parte tecnológica: alta y exploración guiada del Aula Virtual UAS (ubicación de la antología, SCORM de práctica, bitácoras), recorrido por las herramientas del semestre (Genially, Quizizz/Nearpod/Mentimeter, simuladores de laboratorio clínico) y prueba en vivo de acceso (cada estudiante entrega una tarea de ejemplo y resuelve un SCORM de prueba antes de que cuente para calificación).\nEvidencia: Checklist de acceso verificado\n\n▸ Miércoles (Sesión 1 — Alcance de la Patología Clínica)\nMicrolección: diferencia entre patología clínica y patología anatómica; fases preanalítica, analítica y postanalítica; point-of-care testing (POCT); valor crítico. Actividad: caso de hiperpotasemia por hemólisis visible — identificar en qué fase ocurrió el error.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 2 — Etiología y factores de riesgo)\nMicrolección: causa necesaria/suficiente/contribuyente, modelo de causas componentes, factores de riesgo modificables/no modificables, riesgo relativo vs. razón de momios. Actividad: clasificar los factores de riesgo de un caso de diabetes en modificables y no modificables.\nEvidencia: Cierre parcial\n\n▸ Viernes (Sesión 3 — Patogénesis + síntesis integrada)\nMicrolección: lesión celular reversible/irreversible, punto de no retorno, necrosis coagulativa/licuefactiva, apoptosis. Actividad: caso de infarto agudo de miocardio (cinética de troponina). Últimos 10 minutos: mini-quiz combinado de los 3 temas de la semana (banco de preguntas) y retroalimentación.\nEvidencia: Mini-quiz combinado",
+    "2": "Unidad 1 · Tema 4. Síntoma, Signo, Síndrome + Tema 5. Medicina Basada en la Evidencia (ciclo corto)\n\n▸ Lunes (Sesión 1 — Síntoma, signo, síndrome)\nMicrolección: síntoma vs. signo, semiología, síndrome vs. entidad nosológica, sensibilidad y especificidad diagnóstica. Actividad: caso de síndrome nefrótico — clasificar cada hallazgo como síntoma o signo.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Medicina Basada en la Evidencia)\nMicrolección: jerarquía piramidal de evidencia, formato PICO, sesgo, metaanálisis. Actividad: ordenar con tarjetas los niveles de la pirámide de evidencia, de menor a mayor rigor.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Profundización combinada)\nCaso integrador que conecta ambos temas: aplicar el razonamiento diagnóstico (reconocimiento de síntomas/signos → hipótesis de síndrome) evaluando la calidad de la evidencia disponible para cada posible causa.\nEvidencia: Resolución de caso\n\n▸ Viernes (Síntesis y cierre de Unidad 1)\nMini-quiz combinado (banco de preguntas de los dos temas). Retroalimentación. Cierre de la Unidad 1 con mapa conceptual breve: etiología → patogénesis → síntoma/signo/síndrome → evidencia.\nEvidencia: Mini-quiz + mapa conceptual",
+    "3": "Unidad 2 · Tema 1. Composición de la Sangre + Tema 2. Hematopoyesis + Tema 3. Alteraciones Hematológicas Más Comunes\n\n▸ Lunes (Sesión 1 — Composición de la sangre)\nMicrolección: hematocrito, proteínas plasmáticas (albúmina, fibrinógeno, globulinas), elementos formes. Actividad: caso de cirrosis hepática con hipoalbuminemia — explicar el edema y la ascitis por presión oncótica.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Hematopoyesis)\nMicrolección: progenitor mieloide/linfoide común, eritropoyetina, trombopoyetina, sitios hematopoyéticos por etapa de vida. Actividad: caso de enfermedad renal crónica con anemia — relacionar con deficiencia de EPO.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Alteraciones hematológicas más comunes)\nMicrolección: anemia (mecanismos), policitemia primaria/secundaria, leucocitosis/leucopenia, trombocitopenia, neoplasias hematológicas. Actividad: caso de anemia ferropénica por sangrado menstrual — identificar el mecanismo.\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis integradora de los 3 temas)\nMini-quiz combinado (banco de preguntas de los tres temas). Retroalimentación.\nEvidencia: Mini-quiz",
+    "4": "Unidad 2 · Tema 4. Interpretación del Hemograma + Tema 5. Pruebas Específicas en Hematología (ciclo corto)\n\n▸ Lunes (Sesión 1 — Interpretación del hemograma)\nMicrolección: VCM, RDW, HCM/CHCM, desviación a la izquierda, VPM. Actividad: interpretar un hemograma real de un paciente con neumonía (desviación a la izquierda, serie roja/plaquetaria normales).\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Pruebas específicas en hematología)\nMicrolección: esquistocitos, esferocitos, cuerpos de Howell-Jolly, índice de producción reticulocitaria, ferritina/TIBC/saturación de transferrina, TP/TTPa, Coombs directo/indirecto. Actividad: completar el patrón de hierro de un caso de anemia ferropénica.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Profundización combinada)\nCaso integrador: un mismo paciente con hemograma completo y pruebas específicas — construir la interpretación diagnóstica combinando ambos niveles de análisis.\nEvidencia: Resolución de caso\n\n▸ Viernes (Síntesis y cierre de Unidad 2)\nMini-quiz combinado. Cierre de la Unidad 2.\nEvidencia: Mini-quiz",
+    "5": "Unidad 3 · Tema 1. Principios de la Donación de Sangre + Tema 2. Tipos de Transfusiones e Indicaciones + Tema 3. Reacciones Transfusionales\n\n▸ Lunes (Sesión 1 — Principios de la donación)\nMicrolección: donación voluntaria/reposición/autóloga/dirigida, tamizaje serológico, periodo de ventana inmunológica, diferimiento del donante. Actividad: caso de un donante con tatuaje reciente y viaje a zona endémica — aplicar el diferimiento correspondiente.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Tipos de transfusiones e indicaciones)\nMicrolección: terapia por componentes, sistema ABO, concentrado eritrocitario/plaquetario, plasma fresco congelado, crioprecipitado, aféresis terapéutica. Actividad: caso de politraumatizado — decidir qué combinación de componentes transfundir.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Reacciones transfusionales)\nMicrolección: reacción hemolítica aguda, reacción febril no hemolítica, TRALI, TACO, toxicidad por citrato, aloinmunización. Actividad: diferenciar TRALI de TACO en un caso con edema pulmonar agudo.\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis integradora de los 3 temas)\nMini-quiz combinado.\nEvidencia: Mini-quiz",
+    "6": "Unidad 3 · Tema 4. Conservación y Manejo de Hemoderivados + Tema 5. Tendencias de Investigación en Medicina Transfusional (ciclo corto)\n\n▸ Lunes (Sesión 1 — Conservación y manejo de hemoderivados)\nMicrolección: temperatura de conservación por componente, lesión de almacenamiento, cadena de frío, trazabilidad. Actividad: caso de falla de refrigeración — decidir si las unidades pueden liberarse sin evaluación adicional.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Tendencias de investigación en medicina transfusional)\nMicrolección: gestión de sangre del paciente (Patient Blood Management), edición genómica CRISPR/Cas9 en anemia de células falciformes, eritrocitos cultivados in vitro, biobancos de fenotipo raro. Actividad: debate breve — ¿terapia génica o soporte transfusional crónico?\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Profundización combinada)\nCaso integrador: decisión de conservación/liberación de un hemoderivado en un escenario que además contempla el panorama de innovación en el banco de sangre.\nEvidencia: Resolución de caso\n\n▸ Viernes (Síntesis y cierre de Unidad 3)\nMini-quiz combinado. Cierre de la Unidad 3.\nEvidencia: Mini-quiz",
+    "7": "Unidad 4 completa · Tema 1. Metabolismo de Carbohidratos, Lípidos y Proteínas + Tema 2. Marcadores Bioquímicos + Tema 3. Interpretación de Perfiles Metabólicos\n\n▸ Lunes (Sesión 1 — Metabolismo de carbohidratos, lípidos y proteínas)\nMicrolección: metabolismo intermediario, ciclo de Krebs, gluconeogénesis, insulina/glucagón, lipoproteínas (quilomicrones, VLDL, LDL, HDL), beta-oxidación, ciclo de la urea. Actividad: caso de glucosa postprandial elevada — explicar por qué no implica diabetes por sí sola.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Marcadores bioquímicos)\nMicrolección: HbA1c, fructosamina, péptido C, autoanticuerpos de diabetes tipo 1/LADA, ApoB, Lp(a), prealbúmina, ácido úrico, homocisteína. Actividad: caso con LDL normal pero ApoB elevada — explicar la discrepancia.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Interpretación de perfiles metabólicos)\nMicrolección: análisis por eje individual vs. análisis transversal integrado, síndrome metabólico, dislipidemia aterogénica, hipertrigliceridemia severa aislada. Actividad: caso de síndrome metabólico completo — identificar los criterios presentes.\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis integradora y cierre de Unidad 4)\nMini-quiz combinado de los 3 temas. Cierre de la Unidad 4.\nEvidencia: Mini-quiz",
+    "8": "Unidad 5 completa · Tema 1. Fisiología Renal Básica + Tema 2. Alteraciones y Marcadores de Función Renal + Tema 3. Enfermedades Renales Más Frecuentes\n\n▸ Lunes (Sesión 1 — Fisiología renal básica)\nMicrolección: nefrona, barrera de filtración glomerular, túbulo contorneado proximal, asa de Henle, aldosterona/ADH, sistema renina-angiotensina-aldosterona. Actividad: caso de hipotensión posthemorragia — límites de la autorregulación renal.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Alteraciones y marcadores de función renal)\nMicrolección: creatinina, urea, relación urea/creatinina, tasa de filtración glomerular estimada (eGFR), cistatina C, microalbuminuria. Actividad: caso de deshidratación con relación urea/creatinina elevada — origen prerrenal.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Enfermedades renales más frecuentes)\nMicrolección: lesión renal aguda prerrenal/renal/posrenal, síndrome nefrótico vs. nefrítico, nefropatía diabética, anemia por déficit de EPO, pielonefritis. Actividad: caso de nefropatía diabética avanzada — ubicar la fase del daño glomerular.\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis integradora y cierre de Unidad 5)\nMini-quiz combinado de los 3 temas. Cierre de la Unidad 5.\nEvidencia: Mini-quiz",
+    "9": "Unidad 6 completa · Tema 1. Fisiología Hepática Básica + Tema 2. Pruebas Hepáticas y su Interpretación + Tema 3. Hepatopatías Más Comunes\n\n▸ Lunes (Sesión 1 — Fisiología hepática básica)\nMicrolección: lobulillo hepático, tríada portal, doble aporte sanguíneo (arteria hepática + vena porta), células de Kupffer, síntesis de factores de coagulación, metabolismo de bilirrubina. Actividad: caso de ictericia — relacionar bilirrubina con función sintética hepática.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Pruebas hepáticas y su interpretación)\nMicrolección: ALT/AST e índice de De Ritis, fosfatasa alcalina, GGT, tiempo de protrombina/INR vs. albúmina, bilirrubina directa/indirecta, patrón hepatocelular vs. colestásico. Actividad: caso con INR prolongado y albúmina normal — mayor relevancia pronóstica inmediata.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Hepatopatías más comunes)\nMicrolección: hepatitis viral, hepatopatía alcohólica, MASLD, cirrosis, hipertensión portal, encefalopatía hepática, hiperesplenismo. Actividad: caso de cirrosis alcohólica — integrar AST/ALT, albúmina, INR y trombocitopenia.\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis integradora y cierre de Unidad 6)\nMini-quiz combinado de los 3 temas. Cierre de la Unidad 6.\nEvidencia: Mini-quiz",
+    "10": "Unidad 7 completa · Tema 1. Fisiología Ácido-Base + Tema 2. Acidosis y Alcalosis + Tema 3. Interpretación de Gases Arteriales (cierre del bloque teórico)\n\n▸ Lunes (Sesión 1 — Fisiología ácido-base)\nMicrolección: sistema bicarbonato/ácido carbónico, amortiguadores químicos, regulación respiratoria y renal, anhidrasa carbónica. Actividad: caso de ejercicio físico intenso — identificar el mecanismo de respuesta inmediata.\nEvidencia: Cierre parcial\n\n▸ Miércoles (Sesión 2 — Acidosis y alcalosis)\nMicrolección: los cuatro trastornos ácido-base primarios, anion gap, acidosis metabólica con/sin anion gap elevado, alcalosis metabólica y respiratoria. Actividad: caso de cetoacidosis diabética — clasificar el trastorno.\nEvidencia: Cierre parcial\n\n▸ Jueves (Sesión 3 — Interpretación de gases arteriales)\nMicrolección: enfoque sistemático de 5 pasos (pH → componente primario → magnitud de compensación → anion gap → correlación clínica). Actividad: interpretar un gasograma de un paciente con EPOC (acidosis respiratoria crónica compensada).\nEvidencia: Cierre parcial\n\n▸ Viernes (Síntesis final del bloque teórico)\nMini-quiz combinado (banco de preguntas de los tres temas). Evaluación sumativa de cierre del bloque teórico. Reflexión metacognitiva: ¿qué principio metodológico se repitió en las 7 unidades? (reconocer lo normal → identificar la desviación → correlacionar con la clínica).\nEvidencia: Mini-quiz + evaluación sumativa",
+    "11": "Colchón UAS\n\nSi no se usa, puede usarse para:\n• Seminario de casos clínicos integradores\n• Asesoría del proyecto final\n• Regularización de temas con menor dominio",
+    "12": "Laboratorio: Bioseguridad, hematología y banco de sangre\n\n▸ Lunes (Práctica guiada)\nBioseguridad y control de calidad preanalítico/analítico: manejo correcto de muestras, causas de rechazo, identificación de errores preanalíticos.\nEvidencia: Cuaderno de prácticas\n\n▸ Miércoles (Práctica guiada)\nPráctica de hematología: elaboración e interpretación de un hemograma real, revisión de frotis de sangre periférica.\nEvidencia: Cuaderno de prácticas\n\n▸ Jueves (Práctica guiada)\nPráctica de banco de sangre: tipificación ABO/Rh, prueba cruzada, interpretación de resultados.\nEvidencia: Cuaderno de prácticas\n\n▸ Viernes (Cierre de práctica)\nIntegración y entrega del cuaderno de prácticas — fase I (bioseguridad, hematología, banco de sangre).\nEvidencia: Cuaderno de prácticas (entrega fase I)",
+    "13": "Laboratorio: Valoración metabólica, renal, hepática y gasometría\n\n▸ Lunes (Práctica guiada)\nPráctica de valoración metabólica: interpretación de perfil de lípidos, glucosa e indicadores bioquímicos de un caso real.\nEvidencia: Cuaderno de prácticas\n\n▸ Miércoles (Práctica guiada)\nPráctica de valoración renal y hepática: interpretación conjunta de creatinina, urea, pruebas hepáticas de un caso real.\nEvidencia: Cuaderno de prácticas\n\n▸ Jueves (Práctica guiada)\nPráctica de gasometría arterial: interpretación de gasogramas reales aplicando el enfoque de 5 pasos.\nEvidencia: Cuaderno de prácticas\n\n▸ Viernes (Cierre de práctica)\nIntegración final y entrega del cuaderno de prácticas — fase II (metabólico, renal, hepático, gasometría).\nEvidencia: Cuaderno de prácticas (entrega fase II)",
+    "14": "Cierre\n\n▸ Semana 14 (Presentación del proyecto final)\nExposición del proyecto final (análisis crítico y argumentación) por equipos; coevaluación entre pares con rúbrica.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Autoevaluación y cierre)\nAutoevaluación de desempeño, reflexión sobre la transferencia del aprendizaje a la práctica profesional, cierre oficial del curso.\nEvidencia: Reflexión final",
+    "15": "Cierre\n\n▸ Semana 14 (Presentación del proyecto final)\nExposición del proyecto final (análisis crítico y argumentación) por equipos; coevaluación entre pares con rúbrica.\nEvidencia: Rúbrica de coevaluación\n\n▸ Semana 15 (Autoevaluación y cierre)\nAutoevaluación de desempeño, reflexión sobre la transferencia del aprendizaje a la práctica profesional, cierre oficial del curso.\nEvidencia: Reflexión final"
+  }
+};
+
+// Migrar/precargar datos reales del ciclo 2026-2027 una sola vez
+const DATA_VERSION = 3;
+if(load('pc_data_version', 0) < 2){
+  save('pc_schedule', DEFAULT_SCHEDULE);
+}
+if(load('pc_data_version', 0) < 3){
+  const existingPlans = load('pc_plans', {});
+  Object.keys(DEFAULT_PLANS).forEach(subject=>{
+    if(!existingPlans[subject]) existingPlans[subject] = {};
+    Object.keys(DEFAULT_PLANS[subject]).forEach(wk=>{
+      if(!existingPlans[subject][wk]) existingPlans[subject][wk] = DEFAULT_PLANS[subject][wk];
+    });
+  });
+  save('pc_plans', existingPlans);
+}
+save('pc_data_version', DATA_VERSION);
+
+let state = {
+  schedule: load('pc_schedule', DEFAULT_SCHEDULE),
+  tasks: load('pc_tasks', []),
+  notes: load('pc_notes', ""),
+  goals: load('pc_goals', []),
+  plans: load('pc_plans', {})
+};
+
+let currentDay = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
+let currentTab = 'horario';
+let taskFilter = 'all';
+let currentSubject = SUBJECTS[0];
+
+/* ===================== CALENDARIO / SEMANAS (Ciclo 2026-2027) ===================== */
+const SEMESTER_START = new Date(2026,7,24);   // 24 agosto 2026 — inicio de clases
+const WEEK_BLOCK_START = new Date(2026,7,25); // 25 agosto 2026 — inicio del conteo de 15 semanas
+const TOTAL_WEEKS = 15;
+const EXAM_START = new Date(2027,0,5);        // 5 enero 2027
+const SEMESTER_END = new Date(2027,0,15);     // 15 enero 2027
+
+function dayDiff(a,b){ return Math.floor((b - a) / 86400000); }
+
+function getWeekInfo(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(today < SEMESTER_START){
+    return {status:'antes', week:0};
+  }
+  const diff = dayDiff(WEEK_BLOCK_START, today);
+  if(diff < 0){
+    return {status:'inicio', week:0}; // 24 agosto, día previo al bloque de semanas
+  }
+  const weekNum = Math.floor(diff/7) + 1;
+  if(weekNum > TOTAL_WEEKS){
+    if(today >= EXAM_START && today <= SEMESTER_END) return {status:'examenes', week:TOTAL_WEEKS};
+    if(today > SEMESTER_END) return {status:'fin', week:TOTAL_WEEKS};
+    return {status:'examenes', week:TOTAL_WEEKS};
+  }
+  return {status:'clases', week:weekNum};
+}
+
+function weekDateRange(n){
+  const start = new Date(WEEK_BLOCK_START);
+  start.setDate(start.getDate() + (n-1)*7);
+  const end = new Date(start);
+  end.setDate(end.getDate()+6);
+  const fmt = d => d.getDate()+'/'+(d.getMonth()+1);
+  return fmt(start)+' – '+fmt(end);
+}
+
+function renderRuler(){
+  const info = getWeekInfo();
+  const label = document.getElementById('weekLabel');
+  const dates = document.getElementById('weekDates');
+  const ticks = document.getElementById('rulerTicks');
+  ticks.innerHTML = '';
+  for(let i=1;i<=TOTAL_WEEKS;i++){
+    const s = document.createElement('span');
+    if(info.status==='clases' && i===info.week) s.classList.add('current');
+    else if(i < info.week || info.status==='examenes' || info.status==='fin') s.classList.add('past');
+    ticks.appendChild(s);
+  }
+  if(info.status==='antes'){ label.textContent='INICIA 24 AGO 2026'; dates.textContent='Aún no comienza'; }
+  else if(info.status==='inicio'){ label.textContent='DÍA 1 · 24 AGO'; dates.textContent='Bloque de semanas inicia el 25'; }
+  else if(info.status==='clases'){ label.textContent='SEMANA '+info.week+'/15'; dates.textContent=weekDateRange(info.week); }
+  else if(info.status==='examenes'){ label.textContent='EXÁMENES ORDINARIOS'; dates.textContent='5–15 ENE 2027'; }
+  else { label.textContent='SEMESTRE CONCLUIDO'; dates.textContent='Vacaciones'; }
+  return info;
+}
+
+/* ===================== BANNER ===================== */
+let bannerTimer = null;
+function showBanner(msg){
+  const b = document.getElementById('banner');
+  b.textContent = msg;
+  b.classList.add('show');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(()=> b.classList.remove('show'), 1800);
+}
+
+/* ===================== HEADER TICKS ===================== */
+function renderTicks(){
+  const wrap = document.getElementById('weekTicks');
+  wrap.innerHTML = '';
+  const total = state.goals.length;
+  const done = state.goals.filter(g=>g.done).length;
+  const filled = total ? Math.round((done/total)*7) : 0;
+  for(let i=0;i<7;i++){
+    const s = document.createElement('span');
+    if(i < filled) s.classList.add('filled');
+    wrap.appendChild(s);
+  }
+  const pending = state.tasks.filter(t=>!t.done).length;
+  document.getElementById('pendingDot').textContent = pending;
+  document.getElementById('pendingBadge').classList.toggle('tingle', pending > 0);
+}
+
+/* ===================== TABS ===================== */
+function setTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.hex-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  const titles = {
+    horario:['Portal🥼 Adriana Barrios 💕','HORARIO DE CLASES'],
+    tareas:['Portal🥼 Adriana Barrios 💕','GESTOR DE TAREAS'],
+    plan:['Portal🥼 Adriana Barrios 💕','PLANEACIÓN SEMANAL'],
+    notas:['Portal🥼 Adriana Barrios 💕','BITÁCORA PERSONAL'],
+    metas:['Portal🥼 Adriana Barrios 💕','METAS SEMANALES']
+  };
+  document.getElementById('headerTitle').textContent = titles[tab][0];
+  document.getElementById('headerSubtitle').textContent = titles[tab][1];
+  renderActionBar();
+}
+document.querySelectorAll('.hex-btn[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
+});
+
+/* ===================== ACTION BAR ===================== */
+function renderActionBar(){
+  const bar = document.getElementById('actionBar');
+  bar.innerHTML = '';
+  const buttons = {
+    horario:[
+      {label:'+ CLASE', cls:'teal', fn:()=>toggleForm('formHorario')},
+      {label:'HOY', cls:'orange', fn:()=>{currentDay = DAYS[new Date().getDay()===0?6:new Date().getDay()-1]; renderSchedule();}},
+      {label:'BORRAR DÍA', cls:'orange', fn:()=>{ if(confirm('¿Borrar clases de este día?')){ state.schedule[currentDay]=[]; save('pc_schedule', state.schedule); renderSchedule(); showBanner('DÍA BORRADO'); } }},
+      {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    tareas:[
+      {label:'+ TAREA', cls:'teal', fn:()=>toggleForm('formTarea')},
+      {label:'TODAS', cls:'orange', fn:()=>{taskFilter='all'; renderTasks();}},
+      {label:'PENDIENTES', cls:'orange', fn:()=>{taskFilter='pending'; renderTasks();}},
+      {label:'LIMPIAR', cls:'orange', fn:()=>{ state.tasks = state.tasks.filter(t=>!t.done); save('pc_tasks', state.tasks); renderTasks(); showBanner('COMPLETADAS ELIMINADAS'); }}
+    ],
+    plan:[
+      {label:'GUARDAR', cls:'teal', fn:savePlan},
+      {label:'SEM. ANT.', cls:'orange', fn:()=>{ planWeek = Math.max(1, planWeek-1); renderPlanTab(); }},
+      {label:'SEM. SIG.', cls:'orange', fn:()=>{ planWeek = Math.min(TOTAL_WEEKS, planWeek+1); renderPlanTab(); }},
+      {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    notas:[
+      {label:'GUARDAR', cls:'teal', fn:()=>{ save('pc_notes', document.getElementById('notesArea').value); document.getElementById('saveStatus').textContent='Guardado ✓'; showBanner('NOTA GUARDADA'); }},
+      {label:'LIMPIAR', cls:'orange', fn:()=>{ if(confirm('¿Borrar toda la nota?')){ document.getElementById('notesArea').value=''; save('pc_notes',''); showBanner('NOTA BORRADA'); } }},
+      {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    metas:[
+      {label:'+ META', cls:'teal', fn:()=>toggleForm('formMeta')},
+      {label:'REINICIAR', cls:'orange', fn:()=>{ state.goals.forEach(g=>g.done=false); save('pc_goals', state.goals); renderGoals(); showBanner('SEMANA REINICIADA'); }},
+      {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ]
+  };
+  buttons[currentTab].forEach(b=>{
+    const el = document.createElement('button');
+    el.className = 'pill '+b.cls;
+    el.textContent = b.label;
+    el.addEventListener('click', b.fn);
+    bar.appendChild(el);
+  });
+}
+
+function toggleForm(id){
+  document.querySelectorAll('.inline-form').forEach(f=> f.id===id ? f.classList.toggle('show') : f.classList.remove('show'));
+}
+
+function shareApp(){
+  const text = 'Mi agenda PortalClases';
+  if(navigator.share){
+    navigator.share({title:'PortalClases', text}).catch(()=>{});
+  }else{
+    showBanner('COMPARTIR NO DISPONIBLE');
+  }
+}
+
+/* ===================== HORARIO ===================== */
+function renderDayRow(){
+  const row = document.getElementById('dayRow');
+  row.innerHTML = '';
+  DAYS.forEach(d=>{
+    const btn = document.createElement('button');
+    btn.className = 'day-pill' + (d===currentDay ? ' active' : '');
+    btn.textContent = DAY_LABELS[d];
+    btn.addEventListener('click', ()=>{ currentDay = d; renderSchedule(); });
+    row.appendChild(btn);
+  });
+}
+
+function renderSchedule(){
+  renderDayRow();
+  const list = document.getElementById('classList');
+  const items = (state.schedule[currentDay]||[]).slice().sort((a,b)=> a.start.localeCompare(b.start));
+  list.innerHTML = '';
+  if(items.length===0){
+    list.innerHTML = '<div class="empty-hint">Sin clases este día. Usa + CLASE para añadir.</div>';
+    return;
+  }
+  items.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'class-card';
+    card.innerHTML = `
+      <div class="swatch" style="background:${c.color}"></div>
+      <div class="class-info">
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="meta">${c.start} - ${c.end}${c.room? ' · '+escapeHtml(c.room):''}</div>
+      </div>
+      <button class="icon-btn" data-id="${c.id}">×</button>
+    `;
+    card.querySelector('.icon-btn').addEventListener('click', ()=>{
+      state.schedule[currentDay] = state.schedule[currentDay].filter(x=>x.id!==c.id);
+      save('pc_schedule', state.schedule);
+      renderSchedule();
+      showBanner('CLASE ELIMINADA');
+    });
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('saveClase').addEventListener('click', ()=>{
+  const name = document.getElementById('claseName').value.trim();
+  const start = document.getElementById('claseStart').value;
+  const end = document.getElementById('claseEnd').value;
+  const room = document.getElementById('claseRoom').value.trim();
+  const color = document.getElementById('claseColor').value;
+  if(!name || !start || !end){ showBanner('FALTAN DATOS'); return; }
+  state.schedule[currentDay].push({id:Date.now(), name, start, end, room, color});
+  save('pc_schedule', state.schedule);
+  document.getElementById('claseName').value='';
+  document.getElementById('claseRoom').value='';
+  document.getElementById('formHorario').classList.remove('show');
+  renderSchedule();
+  showBanner('CLASE GUARDADA');
+});
+
+/* ===================== TAREAS ===================== */
+function renderTasks(){
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  let items = state.tasks;
+  if(taskFilter==='pending') items = items.filter(t=>!t.done);
+  if(items.length===0){
+    list.innerHTML = '<div class="empty-hint">No hay tareas. Usa + TAREA para añadir.</div>';
+  }else{
+    items.forEach(t=>{
+      const card = document.createElement('div');
+      card.className = 'task-card' + (t.done?' done':'');
+      card.innerHTML = `
+        <input type="checkbox" ${t.done?'checked':''}>
+        <div class="text">${escapeHtml(t.text)}</div>
+        <button class="icon-btn">×</button>
+      `;
+      card.querySelector('input').addEventListener('change', (e)=>{
+        t.done = e.target.checked;
+        save('pc_tasks', state.tasks);
+        renderTasks(); renderTicks();
+      });
+      card.querySelector('.icon-btn').addEventListener('click', ()=>{
+        state.tasks = state.tasks.filter(x=>x.id!==t.id);
+        save('pc_tasks', state.tasks);
+        renderTasks(); renderTicks();
+        showBanner('TAREA ELIMINADA');
+      });
+      list.appendChild(card);
+    });
+  }
+  renderTicks();
+}
+
+document.getElementById('saveTarea').addEventListener('click', ()=>{
+  const val = document.getElementById('tareaText').value.trim();
+  if(!val){ showBanner('ESCRIBE UNA TAREA'); return; }
+  state.tasks.push({id:Date.now(), text:val, done:false});
+  save('pc_tasks', state.tasks);
+  document.getElementById('tareaText').value='';
+  document.getElementById('formTarea').classList.remove('show');
+  renderTasks();
+  showBanner('TAREA AÑADIDA');
+});
+
+/* ===================== PLANEACIÓN SEMANAL ===================== */
+let planWeek = 1;
+
+function renderSubjectRow(){
+  const row = document.getElementById('subjectRow');
+  row.innerHTML = '';
+  SUBJECTS.forEach(s=>{
+    const btn = document.createElement('button');
+    btn.className = 'day-pill' + (s===currentSubject ? ' active' : '');
+    btn.textContent = s;
+    btn.addEventListener('click', ()=>{ savePlanSilently(); currentSubject = s; renderPlanTab(); });
+    row.appendChild(btn);
+  });
+}
+
+function renderPlanWeekNav(){
+  const row = document.getElementById('planWeekNav');
+  row.innerHTML = '';
+  const prev = document.createElement('button');
+  prev.className = 'day-pill'; prev.textContent = '‹';
+  prev.addEventListener('click', ()=>{ savePlanSilently(); planWeek = Math.max(1, planWeek-1); renderPlanTab(); });
+  const cur = document.createElement('span');
+  cur.className = 'day-pill active';
+  cur.textContent = 'SEMANA '+planWeek+' · '+weekDateRange(planWeek);
+  const next = document.createElement('button');
+  next.className = 'day-pill'; next.textContent = '›';
+  next.addEventListener('click', ()=>{ savePlanSilently(); planWeek = Math.min(TOTAL_WEEKS, planWeek+1); renderPlanTab(); });
+  row.appendChild(prev); row.appendChild(cur); row.appendChild(next);
+}
+
+function savePlanSilently(){
+  if(!state.plans[currentSubject]) state.plans[currentSubject] = {};
+  state.plans[currentSubject][planWeek] = document.getElementById('planArea').value;
+  save('pc_plans', state.plans);
+}
+
+function savePlan(){
+  savePlanSilently();
+  document.getElementById('planSaveStatus').textContent = 'Guardado ✓';
+  showBanner('PLANEACIÓN GUARDADA');
+}
+
+function renderPlanTab(){
+  renderSubjectRow();
+  renderPlanWeekNav();
+  const text = (state.plans[currentSubject] && state.plans[currentSubject][planWeek]) || '';
+  document.getElementById('planArea').value = text;
+  document.getElementById('planSaveStatus').textContent = text ? '' : 'Aún no hay planeación cargada para esta semana.';
+}
+
+document.getElementById('planArea').addEventListener('input', ()=>{
+  document.getElementById('planSaveStatus').textContent = 'Escribiendo...';
+});
+
+/* ===================== NOTAS ===================== */
+const notesArea = document.getElementById('notesArea');
+notesArea.value = state.notes;
+let notesTimer = null;
+notesArea.addEventListener('input', ()=>{
+  document.getElementById('saveStatus').textContent = 'Escribiendo...';
+  clearTimeout(notesTimer);
+  notesTimer = setTimeout(()=>{
+    save('pc_notes', notesArea.value);
+    document.getElementById('saveStatus').textContent = 'Guardado ✓';
+  }, 700);
+});
+
+/* ===================== METAS ===================== */
+function renderGoals(){
+  const list = document.getElementById('goalList');
+  list.innerHTML = '';
+  if(state.goals.length===0){
+    list.innerHTML = '<div class="empty-hint">Sin metas. Usa + META para añadir.</div>';
+  }else{
+    state.goals.forEach(g=>{
+      const card = document.createElement('div');
+      card.className = 'goal-card' + (g.done?' done':'');
+      card.innerHTML = `
+        <input type="checkbox" ${g.done?'checked':''}>
+        <div class="text">${escapeHtml(g.text)}</div>
+        <button class="icon-btn">×</button>
+      `;
+      card.querySelector('input').addEventListener('change', (e)=>{
+        g.done = e.target.checked;
+        save('pc_goals', state.goals);
+        renderGoals(); renderTicks();
+      });
+      card.querySelector('.icon-btn').addEventListener('click', ()=>{
+        state.goals = state.goals.filter(x=>x.id!==g.id);
+        save('pc_goals', state.goals);
+        renderGoals(); renderTicks();
+        showBanner('META ELIMINADA');
+      });
+      list.appendChild(card);
+    });
+  }
+  const total = state.goals.length;
+  const done = state.goals.filter(g=>g.done).length;
+  document.getElementById('goalsFill').style.width = total ? (done/total*100)+'%' : '0%';
+  renderTicks();
+}
+
+document.getElementById('saveMeta').addEventListener('click', ()=>{
+  const val = document.getElementById('metaText').value.trim();
+  if(!val){ showBanner('ESCRIBE UNA META'); return; }
+  state.goals.push({id:Date.now(), text:val, done:false});
+  save('pc_goals', state.goals);
+  document.getElementById('metaText').value='';
+  document.getElementById('formMeta').classList.remove('show');
+  renderGoals();
+  showBanner('META AÑADIDA');
+});
+
+/* ===================== UTIL ===================== */
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ===================== INIT ===================== */
+(function initPlanWeek(){
+  const info = getWeekInfo();
+  planWeek = info.week && info.week >= 1 ? info.week : 1;
+})();
+renderRuler();
+renderMarquee();
+renderSchedule();
+renderTasks();
+renderGoals();
+renderPlanTab();
+renderTicks();
+setTab('horario');
+
+/* ===================== SERVICE WORKER ===================== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
