@@ -693,6 +693,7 @@ textarea#notesArea, textarea#planArea{
 
         <div class="inline-form show" id="formEscanerConfig">
           <input type="text" id="scanActividad" placeholder="ID de actividad (ej. Actividad_5)" class="full">
+          <button class="pill teal" id="btnIniciarEscaneoInline">📷 INICIAR CÁMARA</button>
         </div>
 
         <div id="scanReaderWrap" style="margin:10px 12px;border:2px solid var(--border-cyan-soft);border-radius:6px;overflow:hidden;background:#000;">
@@ -1285,6 +1286,7 @@ renderGoals();
 renderPlanTab();
 renderTicks();
 setTab('horario');
+document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
 
 /* ===================== ESCÁNER DE ACTIVIDADES ===================== */
 // Cambia esta URL solo si vuelves a implementar tu Apps Script y te da una nueva.
@@ -1356,10 +1358,18 @@ function onEscaneoExitoso(textoDecodificado){
 
 function iniciarEscaneo(){
   if(escaneando) return;
+  document.getElementById('scanStatus').textContent = 'Solicitando acceso a la cámara...';
+
   if(typeof Html5Qrcode === 'undefined'){
-    document.getElementById('scanStatus').textContent = 'No se pudo cargar la librería de escaneo. Revisa tu conexión.';
+    document.getElementById('scanStatus').textContent = '⚠️ No se pudo cargar la librería de escaneo (revisa tu conexión a internet y recarga la app).';
     return;
   }
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    document.getElementById('scanStatus').textContent = '⚠️ Este navegador no permite acceso a la cámara aquí. Prueba abriendo la app directamente en Safari/Chrome (no solo la versión instalada).';
+    return;
+  }
+
   html5QrCode = new Html5Qrcode("scanReader");
   const config = { fps: 10, qrbox: { width: 240, height: 240 } };
 
@@ -1372,9 +1382,10 @@ function iniciarEscaneo(){
     () => { /* frames sin QR detectado, se ignora */ }
   ).then(() => {
     escaneando = true;
-    document.getElementById('scanStatus').textContent = 'Cámara activa. Apunta al QR del alumno.';
+    document.getElementById('scanStatus').textContent = '✅ Cámara activa. Apunta al QR del alumno.';
   }).catch((err) => {
-    document.getElementById('scanStatus').textContent = 'No se pudo activar la cámara: ' + err;
+    document.getElementById('scanStatus').textContent = '⚠️ No se pudo activar la cámara: ' + err + '. Revisa que le hayas dado permiso de cámara a esta app en los ajustes de tu celular.';
+    logEscaneo('Fallo al iniciar cámara: ' + err, false);
   });
 }
 
