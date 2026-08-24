@@ -1273,21 +1273,6 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-/* ===================== INIT ===================== */
-(function initPlanWeek(){
-  const info = getWeekInfo();
-  planWeek = info.week && info.week >= 1 ? info.week : 1;
-})();
-renderRuler();
-renderMarquee();
-renderSchedule();
-renderTasks();
-renderGoals();
-renderPlanTab();
-renderTicks();
-setTab('horario');
-document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
-
 /* ===================== ESCÁNER DE ACTIVIDADES ===================== */
 // Cambia esta URL solo si vuelves a implementar tu Apps Script y te da una nueva.
 const URL_BACKEND_ACTIVIDADES = "https://script.google.com/macros/s/AKfycbxAO_qjjyyfQaI84dEqIwi62HZCBH9WaGvNHykfqHADV80ath_HRTRyxVMGUsBy6yVL_g/exec";
@@ -1398,6 +1383,21 @@ function detenerEscaneo(){
     }).catch(()=>{});
   }
 }
+
+/* ===================== INIT ===================== */
+(function initPlanWeek(){
+  const info = getWeekInfo();
+  planWeek = info.week && info.week >= 1 ? info.week : 1;
+})();
+renderRuler();
+renderMarquee();
+renderSchedule();
+renderTasks();
+renderGoals();
+renderPlanTab();
+renderTicks();
+setTab('horario');
+document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
 
 /* ===================== SERVICE WORKER ===================== */
 if('serviceWorker' in navigator){
