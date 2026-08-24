@@ -18,6 +18,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <style>
 :root{
@@ -616,6 +617,7 @@ textarea#notesArea, textarea#planArea{
       <button class="hex-btn" data-tab="plan">P<small>Plan</small></button>
       <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
       <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
+      <button class="hex-btn" data-tab="escaner">Q<small>Escáner</small></button>
       <div class="avatar-hex">🕷️<br>A.1</div>
     </nav>
 
@@ -683,6 +685,27 @@ textarea#notesArea, textarea#planArea{
         </div>
 
         <div id="goalList"></div>
+      </section>
+
+      <!-- ESCÁNER DE ACTIVIDADES -->
+      <section class="tab-panel" id="tab-escaner">
+        <div class="panel-title">VALIDAR ACTIVIDAD PRESENCIAL</div>
+
+        <div class="inline-form show" id="formEscanerConfig">
+          <input type="text" id="scanActividad" placeholder="ID de actividad (ej. Actividad_5)" class="full">
+        </div>
+
+        <div id="scanReaderWrap" style="margin:10px 12px;border:2px solid var(--border-cyan-soft);border-radius:6px;overflow:hidden;background:#000;">
+          <div id="scanReader" style="width:100%;"></div>
+        </div>
+
+        <div class="save-status" id="scanStatus">Escribe el ID de actividad y pulsa INICIAR.</div>
+
+        <div id="scanResultCard" style="display:none;margin:10px 12px;padding:10px;border:2px solid var(--teal-dark);border-radius:6px;background:rgba(89,194,163,.12);">
+          <div id="scanResultText" style="font-family:var(--font-body);font-size:18px;color:var(--teal);"></div>
+        </div>
+
+        <div id="scanLog" style="margin:10px 12px;font-size:15px;color:var(--border-cyan);max-height:160px;overflow-y:auto;"></div>
       </section>
 
     </main>
@@ -952,11 +975,13 @@ function setTab(tab){
     tareas:['Portal🥼 Adriana Barrios 💕','GESTOR DE TAREAS'],
     plan:['Portal🥼 Adriana Barrios 💕','PLANEACIÓN SEMANAL'],
     notas:['Portal🥼 Adriana Barrios 💕','BITÁCORA PERSONAL'],
-    metas:['Portal🥼 Adriana Barrios 💕','METAS SEMANALES']
+    metas:['Portal🥼 Adriana Barrios 💕','METAS SEMANALES'],
+    escaner:['Portal🥼 Adriana Barrios 💕','ESCÁNER DE ACTIVIDADES']
   };
   document.getElementById('headerTitle').textContent = titles[tab][0];
   document.getElementById('headerSubtitle').textContent = titles[tab][1];
   renderActionBar();
+  if(tab !== 'escaner') detenerEscaneo();
 }
 document.querySelectorAll('.hex-btn[data-tab]').forEach(btn=>{
   btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
@@ -994,6 +1019,11 @@ function renderActionBar(){
       {label:'+ META', cls:'teal', fn:()=>toggleForm('formMeta')},
       {label:'REINICIAR', cls:'orange', fn:()=>{ state.goals.forEach(g=>g.done=false); save('pc_goals', state.goals); renderGoals(); showBanner('SEMANA REINICIADA'); }},
       {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    escaner:[
+      {label:'INICIAR', cls:'teal', fn:iniciarEscaneo},
+      {label:'DETENER', cls:'orange', fn:detenerEscaneo},
+      {label:'LIMPIAR LOG', cls:'orange', fn:limpiarLogEscaneo}
     ]
   };
   buttons[currentTab].forEach(b=>{
@@ -1255,6 +1285,108 @@ renderGoals();
 renderPlanTab();
 renderTicks();
 setTab('horario');
+
+/* ===================== ESCÁNER DE ACTIVIDADES ===================== */
+// Cambia esta URL solo si vuelves a implementar tu Apps Script y te da una nueva.
+const URL_BACKEND_ACTIVIDADES = "https://script.google.com/macros/s/AKfycbxAO_qjjyyfQaI84dEqIwi62HZCBH9WaGvNHykfqHADV80ath_HRTRyxVMGUsBy6yVL_g/exec";
+
+let html5QrCode = null;
+let escaneando = false;
+
+function logEscaneo(msg, ok){
+  const log = document.getElementById('scanLog');
+  const linea = document.createElement('div');
+  linea.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+  linea.style.color = ok ? 'var(--teal)' : 'var(--red-light)';
+  log.prepend(linea);
+}
+
+function limpiarLogEscaneo(){
+  document.getElementById('scanLog').innerHTML = '';
+}
+
+function mostrarResultado(msg, ok){
+  const card = document.getElementById('scanResultCard');
+  const text = document.getElementById('scanResultText');
+  card.style.display = 'block';
+  card.style.borderColor = ok ? 'var(--teal-dark)' : 'var(--red-dark)';
+  card.style.background = ok ? 'rgba(89,194,163,.12)' : 'rgba(227,91,79,.12)';
+  text.style.color = ok ? 'var(--teal)' : 'var(--red-light)';
+  text.textContent = msg;
+}
+
+function validarEnBackend(matricula, actividad){
+  const url = URL_BACKEND_ACTIVIDADES
+    + '?accion=validar'
+    + '&matricula=' + encodeURIComponent(matricula)
+    + '&actividad=' + encodeURIComponent(actividad);
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if(data.ok){
+        mostrarResultado('✅ ' + matricula + ' — ' + actividad + ' validado', true);
+        logEscaneo(matricula + ' → ' + actividad + ' (OK)', true);
+      } else {
+        mostrarResultado('⚠️ ' + (data.error || 'Error al validar'), false);
+        logEscaneo(matricula + ' → error: ' + (data.error||''), false);
+      }
+    })
+    .catch(err => {
+      mostrarResultado('⚠️ No se pudo conectar con el backend', false);
+      logEscaneo('Error de red: ' + err, false);
+    });
+}
+
+function onEscaneoExitoso(textoDecodificado){
+  // El QR generado por el SCORM trae el formato "matricula|actividad"
+  const partes = textoDecodificado.split('|');
+  const matricula = (partes[0] || '').trim();
+  const actividadQR = (partes[1] || '').trim();
+  const actividadManual = document.getElementById('scanActividad').value.trim();
+  const actividad = actividadManual || actividadQR;
+
+  if(!matricula || !actividad){
+    mostrarResultado('⚠️ Código QR no reconocido', false);
+    return;
+  }
+
+  validarEnBackend(matricula, actividad);
+}
+
+function iniciarEscaneo(){
+  if(escaneando) return;
+  if(typeof Html5Qrcode === 'undefined'){
+    document.getElementById('scanStatus').textContent = 'No se pudo cargar la librería de escaneo. Revisa tu conexión.';
+    return;
+  }
+  html5QrCode = new Html5Qrcode("scanReader");
+  const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    config,
+    (decodedText) => {
+      onEscaneoExitoso(decodedText);
+    },
+    () => { /* frames sin QR detectado, se ignora */ }
+  ).then(() => {
+    escaneando = true;
+    document.getElementById('scanStatus').textContent = 'Cámara activa. Apunta al QR del alumno.';
+  }).catch((err) => {
+    document.getElementById('scanStatus').textContent = 'No se pudo activar la cámara: ' + err;
+  });
+}
+
+function detenerEscaneo(){
+  if(html5QrCode && escaneando){
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      escaneando = false;
+      document.getElementById('scanStatus').textContent = 'Escáner detenido.';
+    }).catch(()=>{});
+  }
+}
 
 /* ===================== SERVICE WORKER ===================== */
 if('serviceWorker' in navigator){
