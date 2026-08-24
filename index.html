@@ -169,6 +169,24 @@ body{
   50%{box-shadow:0 0 10px 2px rgba(227,91,79,.75);}
 }
 
+/* Recolorea las líneas del ícono de pendientes según el tema activo */
+#pendingBadge svg g{stroke:var(--border-cyan) !important;}
+
+/* ---------- SELECTOR DE TEMA/INTERFAZ ---------- */
+.theme-toggle{
+  flex:0 0 auto;
+  width:34px;height:34px;
+  border-radius:50%;
+  background:var(--panel-blue-dark);
+  border:3px solid var(--border-cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+  cursor:pointer;
+  margin-left:2px;
+  transition:transform .15s ease;
+}
+.theme-toggle:active{transform:scale(.9);}
+
 /* spiderman wink: faint web threads in corners of the app frame */
 .app::before, .app::after{
   content:"";
@@ -597,6 +615,7 @@ textarea#notesArea, textarea#planArea{
       </svg>
       <span class="dot" id="pendingDot">0</span>
     </div>
+    <button class="theme-toggle" id="themeToggle" title="Cambiar interfaz" aria-label="Cambiar interfaz">🕷️</button>
   </header>
 
   <div class="semester-ruler">
@@ -618,7 +637,7 @@ textarea#notesArea, textarea#planArea{
       <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
       <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
       <button class="hex-btn" data-tab="escaner">Q<small>Escáner</small></button>
-      <div class="avatar-hex">🕷️<br>A.1</div>
+      <div class="avatar-hex" id="avatarHex">🕷️<br>A.1</div>
     </nav>
 
     <main class="screen">
@@ -747,10 +766,77 @@ const WELCOME_QUOTES = [
   "Un gran poder de la paciencia conlleva una gran responsabilidad: la de respetar el ritmo de aprendizaje de cada individuo, entendiendo que las mentes más brillantes a veces necesitan un poco más de tiempo para florecer."
 ];
 
+const NIGHTWING_QUOTES = [
+  "Quien entrena en las sombras de otro termina por encontrar su propia luz — y esa es la verdadera victoria.",
+  "La disciplina no se nota cuando todo va bien; se nota cuando nadie más está mirando.",
+  "Un buen equipo no necesita gritar para que confíen en él: basta con que siempre esté ahí.",
+  "La precisión no es rapidez, es saber exactamente dónde y cuándo detenerse.",
+  "Cada salto empieza con confiar en el impulso que ya entrenaste antes.",
+  "Liderar no es dejar de aprender: es aprender lo suficiente como para enseñarlo tú mismo.",
+  "La ciudad que cuidas de noche también aprende, con el tiempo, a cuidarte a ti."
+];
+
+/* ===================== TEMA / INTERFAZ ===================== */
+const THEME_DATA = {
+  spider: {
+    icon: "🕷️",
+    avatarInitials: "A.1",
+    welcomeLine: "Bienvenida Adriana,",
+    headerName: "Portal🥼 Adriana Barrios 💕",
+    quotes: WELCOME_QUOTES,
+    colors: {
+      "--border-cyan": "#5cd3f0",
+      "--border-cyan-soft": "#2f7fa0",
+      "--bg-outer": "#05141d",
+      "--panel-blue-dark": "#0a2233",
+      "--panel-blue": "#123852",
+      "--panel-blue-light": "#1a4a68"
+    }
+  },
+  nightwing: {
+    icon: "🦇",
+    avatarInitials: "M.1",
+    welcomeLine: "Bienvenido Manuel,",
+    headerName: "Portal🦇 Manuel",
+    quotes: NIGHTWING_QUOTES,
+    colors: {
+      "--border-cyan": "#3b6fee",
+      "--border-cyan-soft": "#1f3a8f",
+      "--bg-outer": "#03050a",
+      "--panel-blue-dark": "#070a13",
+      "--panel-blue": "#0d1424",
+      "--panel-blue-light": "#141d33"
+    }
+  }
+};
+
+let currentTheme = load('pc_theme', 'spider');
+
+function applyTheme(themeKey){
+  currentTheme = THEME_DATA[themeKey] ? themeKey : 'spider';
+  save('pc_theme', currentTheme);
+  const t = THEME_DATA[currentTheme];
+
+  Object.keys(t.colors).forEach(varName=>{
+    document.documentElement.style.setProperty(varName, t.colors[varName]);
+  });
+
+  document.getElementById('themeToggle').textContent = t.icon;
+  document.getElementById('avatarHex').innerHTML = t.icon + '<br>' + t.avatarInitials;
+
+  renderMarquee();
+  setTab(currentTab);
+}
+
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  applyTheme(currentTheme === 'spider' ? 'nightwing' : 'spider');
+});
+
 function renderMarquee(){
   const track = document.getElementById('marqueeTrack');
-  const quote = WELCOME_QUOTES[Math.floor(Math.random()*WELCOME_QUOTES.length)];
-  track.innerHTML = '<b>Bienvenida Adriana,</b> ' + escapeHtml(quote) + '\u00A0\u00A0\u00A0\u00A0🕷️\u00A0\u00A0\u00A0\u00A0';
+  const t = THEME_DATA[currentTheme];
+  const quote = t.quotes[Math.floor(Math.random()*t.quotes.length)];
+  track.innerHTML = '<b>' + t.welcomeLine + '</b> ' + escapeHtml(quote) + '\u00A0\u00A0\u00A0\u00A0' + t.icon + '\u00A0\u00A0\u00A0\u00A0';
   // velocidad lenta y constante, sin importar el largo del texto
   requestAnimationFrame(()=>{
     const width = track.scrollWidth;
@@ -971,13 +1057,14 @@ function setTab(tab){
   currentTab = tab;
   document.querySelectorAll('.hex-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  const headerName = THEME_DATA[currentTheme].headerName;
   const titles = {
-    horario:['Portal🥼 Adriana Barrios 💕','HORARIO DE CLASES'],
-    tareas:['Portal🥼 Adriana Barrios 💕','GESTOR DE TAREAS'],
-    plan:['Portal🥼 Adriana Barrios 💕','PLANEACIÓN SEMANAL'],
-    notas:['Portal🥼 Adriana Barrios 💕','BITÁCORA PERSONAL'],
-    metas:['Portal🥼 Adriana Barrios 💕','METAS SEMANALES'],
-    escaner:['Portal🥼 Adriana Barrios 💕','ESCÁNER DE ACTIVIDADES']
+    horario:[headerName,'HORARIO DE CLASES'],
+    tareas:[headerName,'GESTOR DE TAREAS'],
+    plan:[headerName,'PLANEACIÓN SEMANAL'],
+    notas:[headerName,'BITÁCORA PERSONAL'],
+    metas:[headerName,'METAS SEMANALES'],
+    escaner:[headerName,'ESCÁNER DE ACTIVIDADES']
   };
   document.getElementById('headerTitle').textContent = titles[tab][0];
   document.getElementById('headerSubtitle').textContent = titles[tab][1];
@@ -1396,7 +1483,7 @@ renderTasks();
 renderGoals();
 renderPlanTab();
 renderTicks();
-setTab('horario');
+applyTheme(currentTheme);
 document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
 
 /* ===================== SERVICE WORKER ===================== */
