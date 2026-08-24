@@ -36,9 +36,11 @@
   --orange:#eb9a5e;
   --orange-dark:#8a4a1f;
   --orange-text:#3a2210;
+  --orange-highlight:#ffd3ab;
   --teal:#59c2a3;
   --teal-dark:#1f5c4a;
   --teal-text:#0d2e24;
+  --teal-highlight:#a9e8d4;
   --cream:#e8f7fc;
   --yellow:#f2c94c;
   --font-display:'Press Start 2P', monospace;
@@ -326,7 +328,7 @@ body{
 .hex-btn small{display:block;font-family:var(--font-body);font-size:9px;margin-top:2px;opacity:.85;}
 .hex-btn.active{
   background:var(--teal);
-  box-shadow:inset -3px -4px 0 var(--teal-dark), inset 3px 3px 0 #a9e8d4;
+  box-shadow:inset -3px -4px 0 var(--teal-dark), inset 3px 3px 0 var(--teal-highlight);
   color:var(--teal-text);
 }
 .hex-btn:active{filter:brightness(.85);}
@@ -536,12 +538,12 @@ textarea#notesArea, textarea#planArea{
 .pill.orange{
   background:var(--orange);
   color:var(--orange-text);
-  box-shadow:inset -2px -3px 0 var(--orange-dark), inset 2px 2px 0 #ffd3ab;
+  box-shadow:inset -2px -3px 0 var(--orange-dark), inset 2px 2px 0 var(--orange-highlight);
 }
 .pill.teal{
   background:var(--teal);
   color:var(--teal-text);
-  box-shadow:inset -2px -3px 0 var(--teal-dark), inset 2px 2px 0 #a9e8d4;
+  box-shadow:inset -2px -3px 0 var(--teal-dark), inset 2px 2px 0 var(--teal-highlight);
 }
 .pill:active{filter:brightness(.88);}
 
@@ -790,7 +792,18 @@ const THEME_DATA = {
       "--bg-outer": "#05141d",
       "--panel-blue-dark": "#0a2233",
       "--panel-blue": "#123852",
-      "--panel-blue-light": "#1a4a68"
+      "--panel-blue-light": "#1a4a68",
+      "--teal": "#59c2a3",
+      "--teal-dark": "#1f5c4a",
+      "--teal-text": "#0d2e24",
+      "--teal-highlight": "#a9e8d4",
+      "--orange": "#eb9a5e",
+      "--orange-dark": "#8a4a1f",
+      "--orange-text": "#3a2210",
+      "--orange-highlight": "#ffd3ab",
+      "--red": "#e35b4f",
+      "--red-dark": "#7a231c",
+      "--red-light": "#ff9a8d"
     }
   },
   nightwing: {
@@ -805,7 +818,18 @@ const THEME_DATA = {
       "--bg-outer": "#03050a",
       "--panel-blue-dark": "#070a13",
       "--panel-blue": "#0d1424",
-      "--panel-blue-light": "#141d33"
+      "--panel-blue-light": "#141d33",
+      "--teal": "#3b6fee",
+      "--teal-dark": "#132a70",
+      "--teal-text": "#eaf1ff",
+      "--teal-highlight": "#9dc0ff",
+      "--orange": "#4a5568",
+      "--orange-dark": "#202634",
+      "--orange-text": "#eef2ff",
+      "--orange-highlight": "#8b9bc0",
+      "--red": "#c23b4a",
+      "--red-dark": "#5e1620",
+      "--red-light": "#ff8fa0"
     }
   }
 };
