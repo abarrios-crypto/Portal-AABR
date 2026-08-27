@@ -1,4 +1,4 @@
-const CACHE_NAME = "portalclases-cache-v7";
+const CACHE_NAME = "portalclases-cache-v3";
 const ASSETS = [
   "./",
   "./index.html",
