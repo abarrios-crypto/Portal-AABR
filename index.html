@@ -18,6 +18,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 :root{
@@ -35,9 +37,11 @@
   --orange:#eb9a5e;
   --orange-dark:#8a4a1f;
   --orange-text:#3a2210;
+  --orange-highlight:#ffd3ab;
   --teal:#59c2a3;
   --teal-dark:#1f5c4a;
   --teal-text:#0d2e24;
+  --teal-highlight:#a9e8d4;
   --cream:#e8f7fc;
   --yellow:#f2c94c;
   --font-display:'Press Start 2P', monospace;
@@ -166,6 +170,62 @@ body{
 @keyframes tingle{
   0%,100%{box-shadow:0 0 0 rgba(227,91,79,0);}
   50%{box-shadow:0 0 10px 2px rgba(227,91,79,.75);}
+}
+
+/* Recolorea las líneas del ícono de pendientes según el tema activo */
+#pendingBadge svg g{stroke:var(--border-cyan) !important;}
+
+/* ---------- SELECTOR DE TEMA/INTERFAZ ---------- */
+.theme-toggle{
+  flex:0 0 auto;
+  width:34px;height:34px;
+  border-radius:50%;
+  background:var(--panel-blue-dark);
+  border:3px solid var(--border-cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+  cursor:pointer;
+  margin-left:2px;
+  transition:transform .15s ease;
+}
+.theme-toggle:active{transform:scale(.9);}
+
+/* ---------- GENERADOR DE QR DE ALUMNOS ---------- */
+.roster-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:12px;
+  margin:14px 12px;
+}
+.roster-card{
+  background:#fff;
+  border-radius:8px;
+  padding:10px;
+  text-align:center;
+  color:#111;
+  font-family:var(--font-body);
+}
+.roster-card .qrbox{display:flex;justify-content:center;margin-bottom:6px;}
+.roster-card .nombre{font-size:14px;font-weight:bold;line-height:1.2;}
+.roster-card .matricula{font-size:12px;color:#555;margin-bottom:6px;}
+.roster-card .descargar{
+  display:inline-block;
+  margin-top:4px;
+  font-size:12px;
+  color:#1a5fb4;
+  text-decoration:underline;
+  cursor:pointer;
+  background:none;border:0;
+  font-family:var(--font-body);
+}
+
+@media print{
+  body *{visibility:hidden;}
+  #tab-roster, #tab-roster *{visibility:visible;}
+  #tab-roster{position:absolute;top:0;left:0;width:100%;}
+  .panel-title, #rosterInput, #btnGenerarRoster, #btnImprimirRoster, .inline-form, #rosterStatus{display:none !important;}
+  .roster-grid{grid-template-columns:repeat(3, 1fr);}
+  .roster-card{break-inside:avoid;border:1px solid #ccc;}
 }
 
 /* spiderman wink: faint web threads in corners of the app frame */
@@ -307,7 +367,7 @@ body{
 .hex-btn small{display:block;font-family:var(--font-body);font-size:9px;margin-top:2px;opacity:.85;}
 .hex-btn.active{
   background:var(--teal);
-  box-shadow:inset -3px -4px 0 var(--teal-dark), inset 3px 3px 0 #a9e8d4;
+  box-shadow:inset -3px -4px 0 var(--teal-dark), inset 3px 3px 0 var(--teal-highlight);
   color:var(--teal-text);
 }
 .hex-btn:active{filter:brightness(.85);}
@@ -517,12 +577,12 @@ textarea#notesArea, textarea#planArea{
 .pill.orange{
   background:var(--orange);
   color:var(--orange-text);
-  box-shadow:inset -2px -3px 0 var(--orange-dark), inset 2px 2px 0 #ffd3ab;
+  box-shadow:inset -2px -3px 0 var(--orange-dark), inset 2px 2px 0 var(--orange-highlight);
 }
 .pill.teal{
   background:var(--teal);
   color:var(--teal-text);
-  box-shadow:inset -2px -3px 0 var(--teal-dark), inset 2px 2px 0 #a9e8d4;
+  box-shadow:inset -2px -3px 0 var(--teal-dark), inset 2px 2px 0 var(--teal-highlight);
 }
 .pill:active{filter:brightness(.88);}
 
@@ -596,6 +656,7 @@ textarea#notesArea, textarea#planArea{
       </svg>
       <span class="dot" id="pendingDot">0</span>
     </div>
+    <button class="theme-toggle" id="themeToggle" title="Cambiar interfaz" aria-label="Cambiar interfaz">🕷️</button>
   </header>
 
   <div class="semester-ruler">
@@ -616,7 +677,9 @@ textarea#notesArea, textarea#planArea{
       <button class="hex-btn" data-tab="plan">P<small>Plan</small></button>
       <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
       <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
-      <div class="avatar-hex">🕷️<br>A.1</div>
+      <button class="hex-btn" data-tab="escaner">Q<small>Escáner</small></button>
+      <button class="hex-btn" data-tab="roster">R<small>QR Alumnos</small></button>
+      <div class="avatar-hex" id="avatarHex">🕷️<br>A.1</div>
     </nav>
 
     <main class="screen">
@@ -685,6 +748,51 @@ textarea#notesArea, textarea#planArea{
         <div id="goalList"></div>
       </section>
 
+      <!-- ESCÁNER DE ACTIVIDADES -->
+      <section class="tab-panel" id="tab-escaner">
+        <div class="panel-title">VALIDAR ACTIVIDAD PRESENCIAL</div>
+
+        <div class="inline-form show" id="formEscanerConfig">
+          <input type="text" id="scanActividad" list="actividadesRecientes" placeholder="ID de actividad (ej. Actividad_5)" class="full">
+          <datalist id="actividadesRecientes"></datalist>
+          <button class="pill teal" id="btnIniciarEscaneoInline">📷 INICIAR CÁMARA</button>
+        </div>
+
+        <div id="scanReaderWrap" style="margin:10px 12px;border:2px solid var(--border-cyan-soft);border-radius:6px;overflow:hidden;background:#000;">
+          <div id="scanReader" style="width:100%;"></div>
+        </div>
+
+        <div class="save-status" id="scanStatus">Escribe el ID de la actividad de hoy y pulsa INICIAR CÁMARA.</div>
+
+        <div id="scanResultCard" style="display:none;margin:10px 12px;padding:10px;border:2px solid var(--teal-dark);border-radius:6px;background:rgba(89,194,163,.12);">
+          <div id="scanResultText" style="font-family:var(--font-body);font-size:18px;color:var(--teal);"></div>
+        </div>
+
+        <div id="scanLog" style="margin:10px 12px;font-size:15px;color:var(--border-cyan);max-height:160px;overflow-y:auto;"></div>
+      </section>
+
+      <!-- GENERADOR DE QR ESTÁTICOS POR ALUMNO -->
+      <section class="tab-panel" id="tab-roster">
+        <div class="panel-title">CÓDIGOS QR DE ALUMNOS (ESTÁTICOS)</div>
+
+        <div style="margin:8px 12px;font-family:var(--font-body);font-size:15px;color:var(--border-cyan);">
+          Pega tu lista, un alumno por línea, con el formato:<br>
+          <code style="color:var(--teal);">matrícula,nombre</code> — por ejemplo: <code style="color:var(--teal);">2024001,Juan Pérez</code>
+        </div>
+
+        <div class="inline-form show">
+          <textarea id="rosterInput" class="full" rows="6" placeholder="2024001,Juan Pérez&#10;2024002,María López&#10;2024003,..." style="min-height:120px;"></textarea>
+        </div>
+        <div class="inline-form show">
+          <button class="pill teal" id="btnGenerarRoster">GENERAR CÓDIGOS QR</button>
+          <button class="pill orange" id="btnImprimirRoster">🖨️ IMPRIMIR / GUARDAR PDF</button>
+        </div>
+
+        <div class="save-status" id="rosterStatus"></div>
+
+        <div id="rosterGrid" class="roster-grid"></div>
+      </section>
+
     </main>
   </div>
 
@@ -723,10 +831,99 @@ const WELCOME_QUOTES = [
   "Un gran poder de la paciencia conlleva una gran responsabilidad: la de respetar el ritmo de aprendizaje de cada individuo, entendiendo que las mentes más brillantes a veces necesitan un poco más de tiempo para florecer."
 ];
 
+const NIGHTWING_QUOTES = [
+  "Quien entrena en las sombras de otro termina por encontrar su propia luz — y esa es la verdadera victoria.",
+  "La disciplina no se nota cuando todo va bien; se nota cuando nadie más está mirando.",
+  "Un buen equipo no necesita gritar para que confíen en él: basta con que siempre esté ahí.",
+  "La precisión no es rapidez, es saber exactamente dónde y cuándo detenerse.",
+  "Cada salto empieza con confiar en el impulso que ya entrenaste antes.",
+  "Liderar no es dejar de aprender: es aprender lo suficiente como para enseñarlo tú mismo.",
+  "La ciudad que cuidas de noche también aprende, con el tiempo, a cuidarte a ti."
+];
+
+/* ===================== TEMA / INTERFAZ ===================== */
+const THEME_DATA = {
+  spider: {
+    icon: "🕷️",
+    avatarInitials: "A.1",
+    welcomeLine: "Bienvenida Adriana,",
+    headerName: "Portal🥼 Adriana Barrios 💕",
+    quotes: WELCOME_QUOTES,
+    colors: {
+      "--border-cyan": "#5cd3f0",
+      "--border-cyan-soft": "#2f7fa0",
+      "--bg-outer": "#05141d",
+      "--panel-blue-dark": "#0a2233",
+      "--panel-blue": "#123852",
+      "--panel-blue-light": "#1a4a68",
+      "--teal": "#59c2a3",
+      "--teal-dark": "#1f5c4a",
+      "--teal-text": "#0d2e24",
+      "--teal-highlight": "#a9e8d4",
+      "--orange": "#eb9a5e",
+      "--orange-dark": "#8a4a1f",
+      "--orange-text": "#3a2210",
+      "--orange-highlight": "#ffd3ab",
+      "--red": "#e35b4f",
+      "--red-dark": "#7a231c",
+      "--red-light": "#ff9a8d"
+    }
+  },
+  nightwing: {
+    icon: "🦇",
+    avatarInitials: "M.1",
+    welcomeLine: "Bienvenido Manuel,",
+    headerName: "Portal🦇 Manuel",
+    quotes: NIGHTWING_QUOTES,
+    colors: {
+      "--border-cyan": "#3b6fee",
+      "--border-cyan-soft": "#1f3a8f",
+      "--bg-outer": "#03050a",
+      "--panel-blue-dark": "#070a13",
+      "--panel-blue": "#0d1424",
+      "--panel-blue-light": "#141d33",
+      "--teal": "#3b6fee",
+      "--teal-dark": "#132a70",
+      "--teal-text": "#eaf1ff",
+      "--teal-highlight": "#9dc0ff",
+      "--orange": "#4a5568",
+      "--orange-dark": "#202634",
+      "--orange-text": "#eef2ff",
+      "--orange-highlight": "#8b9bc0",
+      "--red": "#c23b4a",
+      "--red-dark": "#5e1620",
+      "--red-light": "#ff8fa0"
+    }
+  }
+};
+
+let currentTheme = load('pc_theme', 'spider');
+
+function applyTheme(themeKey){
+  currentTheme = THEME_DATA[themeKey] ? themeKey : 'spider';
+  save('pc_theme', currentTheme);
+  const t = THEME_DATA[currentTheme];
+
+  Object.keys(t.colors).forEach(varName=>{
+    document.documentElement.style.setProperty(varName, t.colors[varName]);
+  });
+
+  document.getElementById('themeToggle').textContent = t.icon;
+  document.getElementById('avatarHex').innerHTML = t.icon + '<br>' + t.avatarInitials;
+
+  renderMarquee();
+  setTab(currentTab);
+}
+
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  applyTheme(currentTheme === 'spider' ? 'nightwing' : 'spider');
+});
+
 function renderMarquee(){
   const track = document.getElementById('marqueeTrack');
-  const quote = WELCOME_QUOTES[Math.floor(Math.random()*WELCOME_QUOTES.length)];
-  track.innerHTML = '<b>Bienvenida Adriana,</b> ' + escapeHtml(quote) + '\u00A0\u00A0\u00A0\u00A0🕷️\u00A0\u00A0\u00A0\u00A0';
+  const t = THEME_DATA[currentTheme];
+  const quote = t.quotes[Math.floor(Math.random()*t.quotes.length)];
+  track.innerHTML = '<b>' + t.welcomeLine + '</b> ' + escapeHtml(quote) + '\u00A0\u00A0\u00A0\u00A0' + t.icon + '\u00A0\u00A0\u00A0\u00A0';
   // velocidad lenta y constante, sin importar el largo del texto
   requestAnimationFrame(()=>{
     const width = track.scrollWidth;
@@ -829,7 +1026,7 @@ const DEFAULT_PLANS = {
 };
 
 // Migrar/precargar datos reales del ciclo 2026-2027 una sola vez
-const DATA_VERSION = 4;
+const DATA_VERSION = 3;
 if(load('pc_data_version', 0) < 2){
   save('pc_schedule', DEFAULT_SCHEDULE);
 }
@@ -841,14 +1038,6 @@ if(load('pc_data_version', 0) < 3){
       if(!existingPlans[subject][wk]) existingPlans[subject][wk] = DEFAULT_PLANS[subject][wk];
     });
   });
-  save('pc_plans', existingPlans);
-}
-if(load('pc_data_version', 0) < 4){
-  // Corrección: la planeación de Histología estaba duplicando el contenido de Fisiopatología.
-  // Se reemplazan por completo ambas materias con los datos corregidos.
-  const existingPlans = load('pc_plans', {});
-  existingPlans['Histología Humana'] = DEFAULT_PLANS['Histología Humana'];
-  existingPlans['Fisiopatología'] = DEFAULT_PLANS['Fisiopatología'];
   save('pc_plans', existingPlans);
 }
 save('pc_data_version', DATA_VERSION);
@@ -955,16 +1144,20 @@ function setTab(tab){
   currentTab = tab;
   document.querySelectorAll('.hex-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  const headerName = THEME_DATA[currentTheme].headerName;
   const titles = {
-    horario:['Portal🥼 Adriana Barrios 💕','HORARIO DE CLASES'],
-    tareas:['Portal🥼 Adriana Barrios 💕','GESTOR DE TAREAS'],
-    plan:['Portal🥼 Adriana Barrios 💕','PLANEACIÓN SEMANAL'],
-    notas:['Portal🥼 Adriana Barrios 💕','BITÁCORA PERSONAL'],
-    metas:['Portal🥼 Adriana Barrios 💕','METAS SEMANALES']
+    horario:[headerName,'HORARIO DE CLASES'],
+    tareas:[headerName,'GESTOR DE TAREAS'],
+    plan:[headerName,'PLANEACIÓN SEMANAL'],
+    notas:[headerName,'BITÁCORA PERSONAL'],
+    metas:[headerName,'METAS SEMANALES'],
+    escaner:[headerName,'ESCÁNER DE ACTIVIDADES'],
+    roster:[headerName,'CÓDIGOS QR DE ALUMNOS']
   };
   document.getElementById('headerTitle').textContent = titles[tab][0];
   document.getElementById('headerSubtitle').textContent = titles[tab][1];
   renderActionBar();
+  if(tab !== 'escaner') detenerEscaneo();
 }
 document.querySelectorAll('.hex-btn[data-tab]').forEach(btn=>{
   btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
@@ -1002,6 +1195,16 @@ function renderActionBar(){
       {label:'+ META', cls:'teal', fn:()=>toggleForm('formMeta')},
       {label:'REINICIAR', cls:'orange', fn:()=>{ state.goals.forEach(g=>g.done=false); save('pc_goals', state.goals); renderGoals(); showBanner('SEMANA REINICIADA'); }},
       {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    escaner:[
+      {label:'INICIAR', cls:'teal', fn:iniciarEscaneo},
+      {label:'DETENER', cls:'orange', fn:detenerEscaneo},
+      {label:'LIMPIAR LOG', cls:'orange', fn:limpiarLogEscaneo}
+    ],
+    roster:[
+      {label:'GENERAR', cls:'teal', fn:generarRosterQR},
+      {label:'IMPRIMIR', cls:'orange', fn:()=>window.print()},
+      {label:'LIMPIAR', cls:'orange', fn:()=>{ document.getElementById('rosterInput').value=''; document.getElementById('rosterGrid').innerHTML=''; document.getElementById('rosterStatus').textContent=''; }}
     ]
   };
   buttons[currentTab].forEach(b=>{
@@ -1250,6 +1453,214 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+/* ===================== ESCÁNER DE ACTIVIDADES ===================== */
+// Cambia esta URL solo si vuelves a implementar tu Apps Script y te da una nueva.
+const URL_BACKEND_ACTIVIDADES = "https://script.google.com/macros/s/AKfycbxqpXaBrOczZ4BFwsSM1aQ4Glqc_sgF2d9dFZZVWfEjDXQ2GXWXjEJ9a7N-htPQszUy1A/exec";
+
+let html5QrCode = null;
+let escaneando = false;
+
+function logEscaneo(msg, ok){
+  const log = document.getElementById('scanLog');
+  const linea = document.createElement('div');
+  linea.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+  linea.style.color = ok ? 'var(--teal)' : 'var(--red-light)';
+  log.prepend(linea);
+}
+
+function limpiarLogEscaneo(){
+  document.getElementById('scanLog').innerHTML = '';
+}
+
+function mostrarResultado(msg, ok){
+  const card = document.getElementById('scanResultCard');
+  const text = document.getElementById('scanResultText');
+  card.style.display = 'block';
+  card.style.borderColor = ok ? 'var(--teal-dark)' : 'var(--red-dark)';
+  card.style.background = ok ? 'rgba(89,194,163,.12)' : 'rgba(227,91,79,.12)';
+  text.style.color = ok ? 'var(--teal)' : 'var(--red-light)';
+  text.textContent = msg;
+}
+
+function guardarActividadReciente(actividad){
+  let recientes = JSON.parse(localStorage.getItem('pc_actividades_recientes') || '[]');
+  recientes = recientes.filter(a => a !== actividad);
+  recientes.unshift(actividad);
+  recientes = recientes.slice(0, 15);
+  localStorage.setItem('pc_actividades_recientes', JSON.stringify(recientes));
+  renderActividadesRecientes();
+}
+
+function renderActividadesRecientes(){
+  const recientes = JSON.parse(localStorage.getItem('pc_actividades_recientes') || '[]');
+  const datalist = document.getElementById('actividadesRecientes');
+  datalist.innerHTML = recientes.map(a => '<option value="'+escapeHtml(a)+'">').join('');
+}
+
+function validarEnBackend(matricula, actividad){
+  const url = URL_BACKEND_ACTIVIDADES
+    + '?accion=validar'
+    + '&matricula=' + encodeURIComponent(matricula)
+    + '&actividad=' + encodeURIComponent(actividad);
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if(data.ok){
+        mostrarResultado('✅ ' + matricula + ' — ' + actividad + ' validado', true);
+        logEscaneo(matricula + ' → ' + actividad + ' (OK)', true);
+        guardarActividadReciente(actividad);
+      } else {
+        mostrarResultado('⚠️ ' + (data.error || 'Error al validar'), false);
+        logEscaneo(matricula + ' → error: ' + (data.error||''), false);
+      }
+    })
+    .catch(err => {
+      mostrarResultado('⚠️ No se pudo conectar con el backend', false);
+      logEscaneo('Error de red: ' + err, false);
+    });
+}
+
+let ultimoEscaneo = { matricula:null, momento:0 };
+
+function onEscaneoExitoso(textoDecodificado){
+  // QR estático del alumno: normalmente solo trae la matrícula.
+  // Se conserva compatibilidad por si algún QR viejo trae "matricula|actividad".
+  // Todo se normaliza a minúsculas para que siempre haga match con Moodle,
+  // sin importar cómo esté escrito el texto original en el QR.
+  const partes = textoDecodificado.split('|');
+  const matricula = (partes[0] || '').trim().toLowerCase();
+  const actividad = document.getElementById('scanActividad').value.trim().toLowerCase();
+
+  if(!actividad){
+    mostrarResultado('⚠️ Falta escribir/elegir el ID de la actividad antes de escanear', false);
+    return;
+  }
+  if(!matricula){
+    mostrarResultado('⚠️ Código QR no reconocido', false);
+    return;
+  }
+
+  // Evita registrar dos veces al mismo alumno si la cámara vuelve a leer
+  // el mismo QR en los siguientes 4 segundos (mientras lo retira de cuadro).
+  const ahora = Date.now();
+  if(ultimoEscaneo.matricula === matricula && (ahora - ultimoEscaneo.momento) < 4000){
+    return;
+  }
+  ultimoEscaneo = { matricula, momento: ahora };
+
+  validarEnBackend(matricula, actividad);
+}
+
+function iniciarEscaneo(){
+  if(escaneando) return;
+  document.getElementById('scanStatus').textContent = 'Solicitando acceso a la cámara...';
+
+  if(typeof Html5Qrcode === 'undefined'){
+    document.getElementById('scanStatus').textContent = '⚠️ No se pudo cargar la librería de escaneo (revisa tu conexión a internet y recarga la app).';
+    return;
+  }
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    document.getElementById('scanStatus').textContent = '⚠️ Este navegador no permite acceso a la cámara aquí. Prueba abriendo la app directamente en Safari/Chrome (no solo la versión instalada).';
+    return;
+  }
+
+  html5QrCode = new Html5Qrcode("scanReader");
+  const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    config,
+    (decodedText) => {
+      onEscaneoExitoso(decodedText);
+    },
+    () => { /* frames sin QR detectado, se ignora */ }
+  ).then(() => {
+    escaneando = true;
+    document.getElementById('scanStatus').textContent = '✅ Cámara activa. Apunta al QR del alumno.';
+  }).catch((err) => {
+    document.getElementById('scanStatus').textContent = '⚠️ No se pudo activar la cámara: ' + err + '. Revisa que le hayas dado permiso de cámara a esta app en los ajustes de tu celular.';
+    logEscaneo('Fallo al iniciar cámara: ' + err, false);
+  });
+}
+
+function detenerEscaneo(){
+  if(html5QrCode && escaneando){
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      escaneando = false;
+      document.getElementById('scanStatus').textContent = 'Escáner detenido.';
+    }).catch(()=>{});
+  }
+}
+
+/* ===================== GENERADOR DE QR DE ALUMNOS (ESTÁTICOS) ===================== */
+function generarRosterQR(){
+  const texto = document.getElementById('rosterInput').value.trim();
+  const grid = document.getElementById('rosterGrid');
+  const status = document.getElementById('rosterStatus');
+  grid.innerHTML = '';
+
+  if(!texto){
+    status.textContent = 'Pega primero la lista de alumnos (matrícula,nombre).';
+    return;
+  }
+
+  if(typeof QRCode === 'undefined'){
+    status.textContent = '⚠️ No se pudo cargar la librería de generación de QR (revisa tu conexión).';
+    return;
+  }
+
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  let generados = 0;
+
+  lineas.forEach((linea, idx) => {
+    const partes = linea.split(',');
+    const matricula = (partes[0] || '').trim();
+    const nombre = (partes.slice(1).join(',') || '').trim();
+    if(!matricula) return;
+
+    const card = document.createElement('div');
+    card.className = 'roster-card';
+
+    const qrId = 'qr_' + idx + '_' + matricula.replace(/[^a-zA-Z0-9]/g, '');
+    card.innerHTML =
+      '<div class="qrbox" id="' + qrId + '"></div>' +
+      (nombre ? '<div class="nombre">' + escapeHtml(nombre) + '</div>' : '') +
+      '<div class="matricula">' + escapeHtml(matricula) + '</div>' +
+      '<button class="descargar" data-matricula="' + escapeHtml(matricula) + '">⬇️ Guardar imagen</button>';
+
+    grid.appendChild(card);
+
+    new QRCode(document.getElementById(qrId), {
+      text: matricula,
+      width: 120,
+      height: 120
+    });
+
+    generados++;
+  });
+
+  status.textContent = generados + ' código(s) QR generado(s). Puedes imprimirlos o descargar la imagen de cada uno.';
+
+  // Conectar los botones de descarga individual (se generan después de crear el canvas)
+  setTimeout(()=>{
+    grid.querySelectorAll('.descargar').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const card = btn.closest('.roster-card');
+        const canvas = card.querySelector('canvas');
+        if(!canvas) return;
+        const matricula = btn.dataset.matricula;
+        const link = document.createElement('a');
+        link.download = 'QR_' + matricula + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    });
+  }, 100);
+}
+
 /* ===================== INIT ===================== */
 (function initPlanWeek(){
   const info = getWeekInfo();
@@ -1262,7 +1673,11 @@ renderTasks();
 renderGoals();
 renderPlanTab();
 renderTicks();
-setTab('horario');
+applyTheme(currentTheme);
+document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
+document.getElementById('btnGenerarRoster').addEventListener('click', generarRosterQR);
+document.getElementById('btnImprimirRoster').addEventListener('click', ()=>window.print());
+renderActividadesRecientes();
 
 /* ===================== SERVICE WORKER ===================== */
 if('serviceWorker' in navigator){
