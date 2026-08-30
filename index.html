@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -19,7 +20,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 :root{
@@ -189,44 +189,6 @@ body{
   transition:transform .15s ease;
 }
 .theme-toggle:active{transform:scale(.9);}
-
-/* ---------- GENERADOR DE QR DE ALUMNOS ---------- */
-.roster-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
-  gap:12px;
-  margin:14px 12px;
-}
-.roster-card{
-  background:#fff;
-  border-radius:8px;
-  padding:10px;
-  text-align:center;
-  color:#111;
-  font-family:var(--font-body);
-}
-.roster-card .qrbox{display:flex;justify-content:center;margin-bottom:6px;}
-.roster-card .nombre{font-size:14px;font-weight:bold;line-height:1.2;}
-.roster-card .matricula{font-size:12px;color:#555;margin-bottom:6px;}
-.roster-card .descargar{
-  display:inline-block;
-  margin-top:4px;
-  font-size:12px;
-  color:#1a5fb4;
-  text-decoration:underline;
-  cursor:pointer;
-  background:none;border:0;
-  font-family:var(--font-body);
-}
-
-@media print{
-  body *{visibility:hidden;}
-  #tab-roster, #tab-roster *{visibility:visible;}
-  #tab-roster{position:absolute;top:0;left:0;width:100%;}
-  .panel-title, #rosterInput, #btnGenerarRoster, #btnImprimirRoster, .inline-form, #rosterStatus{display:none !important;}
-  .roster-grid{grid-template-columns:repeat(3, 1fr);}
-  .roster-card{break-inside:avoid;border:1px solid #ccc;}
-}
 
 /* spiderman wink: faint web threads in corners of the app frame */
 .app::before, .app::after{
@@ -678,7 +640,6 @@ textarea#notesArea, textarea#planArea{
       <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
       <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
       <button class="hex-btn" data-tab="escaner">Q<small>Escáner</small></button>
-      <button class="hex-btn" data-tab="roster">R<small>QR Alumnos</small></button>
       <div class="avatar-hex" id="avatarHex">🕷️<br>A.1</div>
     </nav>
 
@@ -753,7 +714,7 @@ textarea#notesArea, textarea#planArea{
         <div class="panel-title">VALIDAR ACTIVIDAD PRESENCIAL</div>
 
         <div class="inline-form show" id="formEscanerConfig">
-          <input type="text" id="scanActividad" list="actividadesRecientes" placeholder="ID de actividad (ej. Actividad_5)" class="full">
+          <input type="text" id="scanActividad" list="actividadesRecientes" placeholder="ID de actividad — solo si el QR es de matrícula (ej. Actividad_5)" class="full">
           <datalist id="actividadesRecientes"></datalist>
           <button class="pill teal" id="btnIniciarEscaneoInline">📷 INICIAR CÁMARA</button>
         </div>
@@ -762,35 +723,13 @@ textarea#notesArea, textarea#planArea{
           <div id="scanReader" style="width:100%;"></div>
         </div>
 
-        <div class="save-status" id="scanStatus">Escribe el ID de la actividad de hoy y pulsa INICIAR CÁMARA.</div>
+        <div class="save-status" id="scanStatus">Si el QR trae matrícula+actividad (SCORM) no necesitas escribir nada. Si es el QR fijo del alumno, escribe el ID de actividad. Luego pulsa INICIAR CÁMARA.</div>
 
         <div id="scanResultCard" style="display:none;margin:10px 12px;padding:10px;border:2px solid var(--teal-dark);border-radius:6px;background:rgba(89,194,163,.12);">
           <div id="scanResultText" style="font-family:var(--font-body);font-size:18px;color:var(--teal);"></div>
         </div>
 
         <div id="scanLog" style="margin:10px 12px;font-size:15px;color:var(--border-cyan);max-height:160px;overflow-y:auto;"></div>
-      </section>
-
-      <!-- GENERADOR DE QR ESTÁTICOS POR ALUMNO -->
-      <section class="tab-panel" id="tab-roster">
-        <div class="panel-title">CÓDIGOS QR DE ALUMNOS (ESTÁTICOS)</div>
-
-        <div style="margin:8px 12px;font-family:var(--font-body);font-size:15px;color:var(--border-cyan);">
-          Pega tu lista, un alumno por línea, con el formato:<br>
-          <code style="color:var(--teal);">matrícula,nombre</code> — por ejemplo: <code style="color:var(--teal);">2024001,Juan Pérez</code>
-        </div>
-
-        <div class="inline-form show">
-          <textarea id="rosterInput" class="full" rows="6" placeholder="2024001,Juan Pérez&#10;2024002,María López&#10;2024003,..." style="min-height:120px;"></textarea>
-        </div>
-        <div class="inline-form show">
-          <button class="pill teal" id="btnGenerarRoster">GENERAR CÓDIGOS QR</button>
-          <button class="pill orange" id="btnImprimirRoster">🖨️ IMPRIMIR / GUARDAR PDF</button>
-        </div>
-
-        <div class="save-status" id="rosterStatus"></div>
-
-        <div id="rosterGrid" class="roster-grid"></div>
       </section>
 
     </main>
@@ -1151,8 +1090,7 @@ function setTab(tab){
     plan:[headerName,'PLANEACIÓN SEMANAL'],
     notas:[headerName,'BITÁCORA PERSONAL'],
     metas:[headerName,'METAS SEMANALES'],
-    escaner:[headerName,'ESCÁNER DE ACTIVIDADES'],
-    roster:[headerName,'CÓDIGOS QR DE ALUMNOS']
+    escaner:[headerName,'ESCÁNER DE ACTIVIDADES']
   };
   document.getElementById('headerTitle').textContent = titles[tab][0];
   document.getElementById('headerSubtitle').textContent = titles[tab][1];
@@ -1200,11 +1138,6 @@ function renderActionBar(){
       {label:'INICIAR', cls:'teal', fn:iniciarEscaneo},
       {label:'DETENER', cls:'orange', fn:detenerEscaneo},
       {label:'LIMPIAR LOG', cls:'orange', fn:limpiarLogEscaneo}
-    ],
-    roster:[
-      {label:'GENERAR', cls:'teal', fn:generarRosterQR},
-      {label:'IMPRIMIR', cls:'orange', fn:()=>window.print()},
-      {label:'LIMPIAR', cls:'orange', fn:()=>{ document.getElementById('rosterInput').value=''; document.getElementById('rosterGrid').innerHTML=''; document.getElementById('rosterStatus').textContent=''; }}
     ]
   };
   buttons[currentTab].forEach(b=>{
@@ -1454,7 +1387,7 @@ function escapeHtml(str){
 }
 
 /* ===================== ESCÁNER DE ACTIVIDADES ===================== */
-// Cambia esta URL solo si vuelves a implementar tu Apps Script y te da una nueva.
+// URL del Apps Script conectado a la hoja "Actividades" (matrícula + actividad + fecha)
 const URL_BACKEND_ACTIVIDADES = "https://script.google.com/macros/s/AKfycbxqpXaBrOczZ4BFwsSM1aQ4Glqc_sgF2d9dFZZVWfEjDXQ2GXWXjEJ9a7N-htPQszUy1A/exec";
 
 let html5QrCode = null;
@@ -1497,7 +1430,7 @@ function renderActividadesRecientes(){
   datalist.innerHTML = recientes.map(a => '<option value="'+escapeHtml(a)+'">').join('');
 }
 
-function validarEnBackend(matricula, actividad){
+function validarEnBackend(matricula, actividad, metodo){
   const url = URL_BACKEND_ACTIVIDADES
     + '?accion=validar'
     + '&matricula=' + encodeURIComponent(matricula)
@@ -1507,8 +1440,8 @@ function validarEnBackend(matricula, actividad){
     .then(res => res.json())
     .then(data => {
       if(data.ok){
-        mostrarResultado('✅ ' + matricula + ' — ' + actividad + ' validado', true);
-        logEscaneo(matricula + ' → ' + actividad + ' (OK)', true);
+        mostrarResultado('✅ ' + matricula + ' — ' + actividad + ' validado (' + metodo + ')', true);
+        logEscaneo(matricula + ' → ' + actividad + ' (OK · ' + metodo + ')', true);
         guardarActividadReciente(actividad);
       } else {
         mostrarResultado('⚠️ ' + (data.error || 'Error al validar'), false);
@@ -1521,19 +1454,29 @@ function validarEnBackend(matricula, actividad){
     });
 }
 
-let ultimoEscaneo = { matricula:null, momento:0 };
+let ultimoEscaneo = { clave:null, momento:0 };
 
 function onEscaneoExitoso(textoDecodificado){
-  // QR estático del alumno: normalmente solo trae la matrícula.
-  // Se conserva compatibilidad por si algún QR viejo trae "matricula|actividad".
-  // Todo se normaliza a minúsculas para que siempre haga match con Moodle,
-  // sin importar cómo esté escrito el texto original en el QR.
-  const partes = textoDecodificado.split('|');
-  const matricula = (partes[0] || '').trim().toLowerCase();
-  const actividad = document.getElementById('scanActividad').value.trim().toLowerCase();
+  // Dos formatos de QR posibles, detectados automáticamente:
+  //   Método A (automático) → el SCORM genera un QR dinámico "matricula|actividad":
+  //      se usa directamente lo que trae el QR, sin pedir nada más.
+  //   Método B (manual) → QR estático del alumno con solo la matrícula:
+  //      se usa el ID de actividad que la profesora escribió/eligió arriba.
+  // Todo se normaliza a minúsculas para que siempre haga match con el backend.
+  const partes = textoDecodificado.split('|').map(p => (p || '').trim());
+  const matricula = (partes[0] || '').toLowerCase();
+
+  let actividad, metodo;
+  if(partes[1]){
+    actividad = partes[1].toLowerCase();
+    metodo = 'automático · QR del SCORM';
+  } else {
+    actividad = document.getElementById('scanActividad').value.trim().toLowerCase();
+    metodo = 'manual · ID escrito';
+  }
 
   if(!actividad){
-    mostrarResultado('⚠️ Falta escribir/elegir el ID de la actividad antes de escanear', false);
+    mostrarResultado('⚠️ Este QR solo trae la matrícula — escribe/elige el ID de la actividad antes de escanear', false);
     return;
   }
   if(!matricula){
@@ -1541,15 +1484,16 @@ function onEscaneoExitoso(textoDecodificado){
     return;
   }
 
-  // Evita registrar dos veces al mismo alumno si la cámara vuelve a leer
-  // el mismo QR en los siguientes 4 segundos (mientras lo retira de cuadro).
+  // Evita registrar dos veces la misma matrícula+actividad si la cámara
+  // vuelve a leer el mismo QR en los siguientes 4 segundos.
   const ahora = Date.now();
-  if(ultimoEscaneo.matricula === matricula && (ahora - ultimoEscaneo.momento) < 4000){
+  const clave = matricula + '|' + actividad;
+  if(ultimoEscaneo.clave === clave && (ahora - ultimoEscaneo.momento) < 4000){
     return;
   }
-  ultimoEscaneo = { matricula, momento: ahora };
+  ultimoEscaneo = { clave, momento: ahora };
 
-  validarEnBackend(matricula, actividad);
+  validarEnBackend(matricula, actividad, metodo);
 }
 
 function iniciarEscaneo(){
@@ -1595,72 +1539,6 @@ function detenerEscaneo(){
   }
 }
 
-/* ===================== GENERADOR DE QR DE ALUMNOS (ESTÁTICOS) ===================== */
-function generarRosterQR(){
-  const texto = document.getElementById('rosterInput').value.trim();
-  const grid = document.getElementById('rosterGrid');
-  const status = document.getElementById('rosterStatus');
-  grid.innerHTML = '';
-
-  if(!texto){
-    status.textContent = 'Pega primero la lista de alumnos (matrícula,nombre).';
-    return;
-  }
-
-  if(typeof QRCode === 'undefined'){
-    status.textContent = '⚠️ No se pudo cargar la librería de generación de QR (revisa tu conexión).';
-    return;
-  }
-
-  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  let generados = 0;
-
-  lineas.forEach((linea, idx) => {
-    const partes = linea.split(',');
-    const matricula = (partes[0] || '').trim();
-    const nombre = (partes.slice(1).join(',') || '').trim();
-    if(!matricula) return;
-
-    const card = document.createElement('div');
-    card.className = 'roster-card';
-
-    const qrId = 'qr_' + idx + '_' + matricula.replace(/[^a-zA-Z0-9]/g, '');
-    card.innerHTML =
-      '<div class="qrbox" id="' + qrId + '"></div>' +
-      (nombre ? '<div class="nombre">' + escapeHtml(nombre) + '</div>' : '') +
-      '<div class="matricula">' + escapeHtml(matricula) + '</div>' +
-      '<button class="descargar" data-matricula="' + escapeHtml(matricula) + '">⬇️ Guardar imagen</button>';
-
-    grid.appendChild(card);
-
-    new QRCode(document.getElementById(qrId), {
-      text: matricula,
-      width: 120,
-      height: 120
-    });
-
-    generados++;
-  });
-
-  status.textContent = generados + ' código(s) QR generado(s). Puedes imprimirlos o descargar la imagen de cada uno.';
-
-  // Conectar los botones de descarga individual (se generan después de crear el canvas)
-  setTimeout(()=>{
-    grid.querySelectorAll('.descargar').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const card = btn.closest('.roster-card');
-        const canvas = card.querySelector('canvas');
-        if(!canvas) return;
-        const matricula = btn.dataset.matricula;
-        const link = document.createElement('a');
-        link.download = 'QR_' + matricula + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    });
-  }, 100);
-}
-
 /* ===================== INIT ===================== */
 (function initPlanWeek(){
   const info = getWeekInfo();
@@ -1675,8 +1553,6 @@ renderPlanTab();
 renderTicks();
 applyTheme(currentTheme);
 document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
-document.getElementById('btnGenerarRoster').addEventListener('click', generarRosterQR);
-document.getElementById('btnImprimirRoster').addEventListener('click', ()=>window.print());
 renderActividadesRecientes();
 
 /* ===================== SERVICE WORKER ===================== */
