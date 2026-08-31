@@ -1466,6 +1466,12 @@ function renderActividadesRecientes(){
 }
 
 function validarEnBackend(matricula, actividad, metodo){
+  const clave = matricula + '|' + actividad;
+  const ahora = Date.now();
+  if (ultimoEscaneo.clave === clave && (ahora - ultimoEscaneo.momento) < 3000) {
+    return;
+  }
+  ultimoEscaneo = { clave, momento: ahora };
   const url = URL_BACKEND_ACTIVIDADES
     + '?accion=validar'
     + '&matricula=' + encodeURIComponent(matricula)
