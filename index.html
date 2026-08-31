@@ -1581,11 +1581,12 @@ function detenerEscaneo(){
   }
 }
 
-/* ===================== INIT ===================== */
+/* ==================== INIT ==================== */
 (function initPlanWeek(){
   const info = getWeekInfo();
   planWeek = info.week && info.week >= 1 ? info.week : 1;
 })();
+
 renderRuler();
 renderMarquee();
 renderSchedule();
@@ -1597,7 +1598,7 @@ applyTheme(currentTheme);
 document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
 renderActividadesRecientes();
 
-/* ===================== SERVICE WORKER ===================== */
+/* ==================== SERVICE WORKER ==================== */
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('service-worker.js').catch(()=>{});
