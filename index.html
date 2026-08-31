@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -714,10 +713,13 @@ textarea#notesArea, textarea#planArea{
         <div class="panel-title">VALIDAR ACTIVIDAD PRESENCIAL</div>
 
         <div class="inline-form show" id="formEscanerConfig">
-          <input type="text" id="scanActividad" list="actividadesRecientes" placeholder="ID de actividad — solo si el QR es de matrícula (ej. Actividad_5)" class="full">
+          <input type="text" id="scanActividad" list="actividadesRecientes" placeholder="ID completo o atajo corto (ej. sem1-fisio)" class="full">
           <datalist id="actividadesRecientes"></datalist>
+          <button class="pill orange" id="btnGuardarAtajo">💾 GUARDAR COMO ATAJO</button>
           <button class="pill teal" id="btnIniciarEscaneoInline">📷 INICIAR CÁMARA</button>
         </div>
+
+        <div class="save-status" id="atajosStatus"></div>
 
         <div id="scanReaderWrap" style="margin:10px 12px;border:2px solid var(--border-cyan-soft);border-radius:6px;overflow:hidden;background:#000;">
           <div id="scanReader" style="width:100%;"></div>
@@ -1424,6 +1426,39 @@ function guardarActividadReciente(actividad){
   renderActividadesRecientes();
 }
 
+/* ===================== ATAJOS DE ACTIVIDAD ===================== */
+// Los IDs reales de actividad (tomados del título que arma Moodle) pueden
+// ser larguísimos de escribir a mano. Este sistema permite guardar un
+// apodo corto una sola vez ("sem1-fisio") que se traduce automáticamente
+// al ID completo real antes de mandarlo al backend.
+function cargarAtajos(){
+  return JSON.parse(localStorage.getItem('pc_atajos_actividad') || '{}');
+}
+function guardarAtajos(atajos){
+  localStorage.setItem('pc_atajos_actividad', JSON.stringify(atajos));
+}
+function expandirAtajo(texto){
+  const atajos = cargarAtajos();
+  const clave = texto.trim().toLowerCase();
+  return atajos[clave] || texto;
+}
+
+document.getElementById('btnGuardarAtajo').addEventListener('click', ()=>{
+  const valorActual = document.getElementById('scanActividad').value.trim();
+  if(!valorActual){
+    document.getElementById('atajosStatus').textContent = 'Primero escribe o pega el ID completo de la actividad arriba.';
+    return;
+  }
+  const apodo = prompt('¿Con qué apodo corto quieres recordar esta actividad?\n\n(ej. "sem1-fisio")\n\nID completo a guardar:\n' + valorActual);
+  if(!apodo || !apodo.trim()) return;
+  const atajos = cargarAtajos();
+  atajos[apodo.trim().toLowerCase()] = valorActual.toLowerCase();
+  guardarAtajos(atajos);
+  guardarActividadReciente(apodo.trim().toLowerCase());
+  document.getElementById('scanActividad').value = apodo.trim().toLowerCase();
+  document.getElementById('atajosStatus').textContent = '✅ Atajo guardado: "' + apodo.trim().toLowerCase() + '" → ' + valorActual.toLowerCase();
+});
+
 function renderActividadesRecientes(){
   const recientes = JSON.parse(localStorage.getItem('pc_actividades_recientes') || '[]');
   const datalist = document.getElementById('actividadesRecientes');
@@ -1471,8 +1506,9 @@ function onEscaneoExitoso(textoDecodificado){
     actividad = partes[1].toLowerCase();
     metodo = 'automático · QR del SCORM';
   } else {
-    actividad = document.getElementById('scanActividad').value.trim().toLowerCase();
-    metodo = 'manual · ID escrito';
+    const escrito = document.getElementById('scanActividad').value.trim().toLowerCase();
+    actividad = expandirAtajo(escrito).toLowerCase();
+    metodo = (actividad !== escrito) ? 'manual · atajo "' + escrito + '"' : 'manual · ID escrito';
   }
 
   if(!actividad){
