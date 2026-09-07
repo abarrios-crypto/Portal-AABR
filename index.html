@@ -1007,18 +1007,83 @@ if(load('pc_data_version', 0) < 3){
 }
 save('pc_data_version', DATA_VERSION);
 
-// Catálogo de temas por materia. Se puede precargar con DEFAULT_TOPICS_CATALOG
-// cuando lleguen los temarios reales de cada materia (mismo patrón que DEFAULT_PLANS).
+// Catálogo de temas por materia, tomado de los temarios reales de cada antología.
 const DEFAULT_TOPICS_CATALOG = {
-  "Histología Humana": [],
-  "Fisiopatología": [],
-  "Patología Clínica II": []
+  "Histología Humana": [
+    {id:"t1", name:"Introducción a la histología biomédica: concepto e importancia; relación estructura-función; aplicaciones en investigación, diagnóstico y biotecnología"},
+    {id:"t2", name:"Microscopía aplicada al análisis histológico: campo claro, digital y virtual, introducción a la microscopía electrónica; interpretación de imágenes"},
+    {id:"t3", name:"Técnicas histológicas fundamentales: obtención y procesamiento de muestras; fijación, inclusión, corte y montaje; tinción hematoxilina-eosina y tinciones especiales; introducción a inmunohistoquímica e inmunofluorescencia"},
+    {id:"t4", name:"Tejido epitelial: clasificación, especializaciones de superficie, epitelios de revestimiento y glandulares, barreras biológicas y transporte"},
+    {id:"t5", name:"Tejido conectivo: componentes celulares, matriz extracelular, fibras, reparación y remodelación tisular"},
+    {id:"t6", name:"Tejido muscular: esquelético, cardíaco y liso; adaptación y regeneración"},
+    {id:"t7", name:"Tejido nervioso: neuronas y neuroglía, organización básica, barrera hematoencefálica"},
+    {id:"t8", name:"Integración biomédica: inflamación, cicatrización, fibrosis, medicina regenerativa e ingeniería de tejidos"},
+    {id:"t9", name:"Tejido sanguíneo y hematopoyesis: componentes celulares de la sangre, médula ósea, hematopoyesis"},
+    {id:"t10", name:"Sistema inmune y órganos linfoides: timo, ganglio linfático, bazo, tejido linfoide asociado a mucosas (MALT)"},
+    {id:"t11", name:"Sistema cardiovascular: arterias, venas, capilares y corazón"},
+    {id:"t12", name:"Integración biomédica: bases histológicas de la respuesta inmune, inflamación aguda y crónica, biomarcadores tisulares, introducción al diagnóstico histopatológico"},
+    {id:"t13", name:"Sistema respiratorio: vías aéreas de conducción, región respiratoria, barrera alveolo-capilar"},
+    {id:"t14", name:"Sistema digestivo: organización del tubo digestivo, intestino delgado, hígado, páncreas exocrino"},
+    {id:"t15", name:"Sistema endocrino: hipófisis, tiroides, glándulas suprarrenales, páncreas endocrino"},
+    {id:"t16", name:"Sistema urinario: riñón, nefrona, vías urinarias"},
+    {id:"t17", name:"Integración biomédica: diabetes mellitus, enfermedad renal, enfermedades respiratorias, alteraciones hepáticas y aplicaciones diagnósticas de la histología"}
+  ],
+  "Fisiopatología": [
+    {id:"t1", name:"Introducción a la Fisiopatología desde la Perspectiva Biomédica"},
+    {id:"t2", name:"Bases Celulares y Moleculares de la Enfermedad"},
+    {id:"t3", name:"Estudio General de la Fisiopatología por Órganos y Sistemas"},
+    {id:"t4", name:"Identificación de Marcadores y Procesos Específicos Relevantes para el Diagnóstico Clínico y la Investigación Biomédica"},
+    {id:"t5", name:"Patología Inmunológica e Inflamatoria"},
+    {id:"t6", name:"Enfermedades Infecciosas"},
+    {id:"t7", name:"Enfermedades Metabólicas y Nutricionales"},
+    {id:"t8", name:"Enfermedades Neurológicas"},
+    {id:"t9", name:"Enfermedades Oncológicas"},
+    {id:"t10", name:"Fisiopatología en la Evaluación Clínica y Diagnóstica desde una Perspectiva Investigativa"},
+    {id:"t11", name:"Relación entre Fisiopatología y Terapéutica Basada en la Evidencia Científica"},
+    {id:"t12", name:"Prevención y Promoción de la Salud: Exploración de Factores de Riesgo Relevantes"},
+    {id:"t13", name:"Epigenética y Enfermedad; Microbiota y Salud"},
+    {id:"t14", name:"Biomarcadores y Medicina Personalizada; Células Madre y Regeneración Tisular"},
+    {id:"t15", name:"Inflamación Crónica y Enfermedades; Neurodegeneración y Plasticidad Neuronal; Fisiopatología del Envejecimiento"}
+  ],
+  "Patología Clínica II": [
+    {id:"t1", name:"Alcance de la Patología Clínica en la Biomedicina"},
+    {id:"t2", name:"Etiología y Factores de Riesgo en la Investigación Biomédica"},
+    {id:"t3", name:"Patogénesis — Fundamentos Lesionales y Fisiopatológicos"},
+    {id:"t4", name:"Síntoma, Signo, Síndrome y Conceptos Afines"},
+    {id:"t5", name:"Medicina Basada en la Evidencia"},
+    {id:"t6", name:"Composición de la Sangre"},
+    {id:"t7", name:"Hematopoyesis y Funciones de los Tipos Celulares"},
+    {id:"t8", name:"Alteraciones Hematológicas Más Comunes"},
+    {id:"t9", name:"Interpretación del Hemograma"},
+    {id:"t10", name:"Pruebas Específicas en Hematología"},
+    {id:"t11", name:"Principios de la Donación de Sangre"},
+    {id:"t12", name:"Tipos de Transfusiones e Indicaciones"},
+    {id:"t13", name:"Reacciones Transfusionales"},
+    {id:"t14", name:"Conservación y Manejo de Hemoderivados"},
+    {id:"t15", name:"Tendencias de Investigación en Medicina Transfusional"},
+    {id:"t16", name:"Metabolismo de Carbohidratos, Lípidos y Proteínas"},
+    {id:"t17", name:"Marcadores Bioquímicos"},
+    {id:"t18", name:"Interpretación de Perfiles Metabólicos"},
+    {id:"t19", name:"Fisiología Renal Básica"},
+    {id:"t20", name:"Alteraciones y Marcadores de Función Renal"},
+    {id:"t21", name:"Enfermedades Renales Más Frecuentes"},
+    {id:"t22", name:"Fisiología Hepática Básica"},
+    {id:"t23", name:"Pruebas Hepáticas y su Interpretación"},
+    {id:"t24", name:"Hepatopatías Más Comunes"},
+    {id:"t25", name:"Fisiología Ácido-Base"},
+    {id:"t26", name:"Acidosis y Alcalosis"},
+    {id:"t27", name:"Interpretación de Gases Arteriales"}
+  ]
 };
-const TOPICS_VERSION = 1;
-if(load('pc_topics_version', 0) < 1){
+// v2: carga los temarios reales. Solo rellena materias cuyo catálogo local
+// esté vacío, para no pisar temas que el usuario ya haya añadido a mano.
+const TOPICS_VERSION = 2;
+if(load('pc_topics_version', 0) < 2){
   const existingCatalog = load('pc_topics_catalog', {});
   Object.keys(DEFAULT_TOPICS_CATALOG).forEach(subject=>{
-    if(!existingCatalog[subject]) existingCatalog[subject] = DEFAULT_TOPICS_CATALOG[subject];
+    if(!existingCatalog[subject] || existingCatalog[subject].length===0){
+      existingCatalog[subject] = DEFAULT_TOPICS_CATALOG[subject];
+    }
   });
   save('pc_topics_catalog', existingCatalog);
 }
