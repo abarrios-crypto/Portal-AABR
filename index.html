@@ -589,9 +589,35 @@ textarea#notesArea, textarea#planArea{
   .title{font-size:10px;}
   .subtitle{font-size:14px;}
 }
+#backToTopBtn{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:48px;height:48px;
+  border-radius:50%;
+  background:var(--teal);
+  color:var(--teal-text);
+  border:2px solid var(--border-cyan);
+  font-size:20px;
+  line-height:1;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:999;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);
+}
+#backToTopBtn.show{display:flex;}
+
+.tema-header .name{
+  font-size:16px;
+  line-height:1.25;
+}
 </style>
 </head>
 <body>
+
+<button id="backToTopBtn" title="Volver arriba" aria-label="Volver arriba">⬆</button>
 
 <div class="app">
 
@@ -1466,6 +1492,7 @@ function renderTemaSubjectRow(){
     btn.textContent = s;
     btn.addEventListener('click', ()=>{
       currentTemaSubject = s;
+      expandedTemas.clear();
       ensureGroupsForSubject(currentTemaSubject);
       const groups = state.topicsGroups[currentTemaSubject];
       currentTemaGroup = groups.length ? groups[0] : null;
@@ -1488,7 +1515,7 @@ function renderTemaGroupRow(){
     const btn = document.createElement('button');
     btn.className = 'day-pill' + (g===currentTemaGroup ? ' active' : '');
     btn.textContent = g;
-    btn.addEventListener('click', ()=>{ currentTemaGroup = g; renderTemaList(); renderTemaProgress(); });
+    btn.addEventListener('click', ()=>{ currentTemaGroup = g; expandedTemas.clear(); renderTemaGroupRow(); renderTemaList(); renderTemaProgress(); });
     row.appendChild(btn);
   });
   const del = document.createElement('button');
@@ -1555,6 +1582,8 @@ function renderTemaProgress(){
   label.textContent = done+' de '+topics.length+' temas vistos · '+currentTemaSubject+' · '+currentTemaGroup;
 }
 
+let expandedTemas = new Set();
+
 function renderTemaList(){
   const list = document.getElementById('temaList');
   list.innerHTML = '';
@@ -1569,29 +1598,73 @@ function renderTemaList(){
     return;
   }
 
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
+  toolbar.innerHTML = `
+    <button class="pill teal" id="expandAllTemas" style="flex:1;">EXPANDIR TODO</button>
+    <button class="pill orange" id="collapseAllTemas" style="flex:1;">COLAPSAR TODO</button>
+  `;
+  list.appendChild(toolbar);
+  toolbar.querySelector('#expandAllTemas').addEventListener('click', ()=>{
+    topics.forEach(t=>expandedTemas.add(t.id));
+    renderTemaList();
+  });
+  toolbar.querySelector('#collapseAllTemas').addEventListener('click', ()=>{
+    expandedTemas.clear();
+    renderTemaList();
+  });
+
   topics.forEach(t=>{
     const entry = getTemaEntry(currentTemaSubject, currentTemaGroup, t.id);
+    const isOpen = expandedTemas.has(t.id);
     const card = document.createElement('div');
     card.className = 'class-card';
     card.style.flexDirection = 'column';
     card.style.alignItems = 'stretch';
     card.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div class="tema-header" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
         <input type="checkbox" style="width:20px;height:20px;accent-color:var(--teal);flex:0 0 auto;" ${entry.seen?'checked':''}>
-        <div class="class-info"><div class="name">${escapeHtml(t.name)}</div></div>
+        <div class="class-info" style="min-width:0;"><div class="name" style="${isOpen?'':'white-space:normal;'}">${escapeHtml(t.name)}</div>${(entry.notes||entry.pending) ? '<div style="font-size:13px;color:var(--border-cyan-soft);">'+(entry.notes?'📝 ':'')+(entry.pending?'⏳ pendiente':'')+'</div>' : ''}</div>
+        <span class="tema-chevron" style="flex:0 0 auto;font-size:14px;color:var(--border-cyan);transition:transform .15s;${isOpen?'transform:rotate(90deg);':''}">▸</span>
         <button class="icon-btn" title="Eliminar tema">×</button>
       </div>
-      <textarea placeholder="Observaciones de este tema..." style="width:100%;min-height:50px;margin-top:8px;resize:vertical;background:var(--panel-blue-dark);border:2px solid var(--border-cyan-soft);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.notes)}</textarea>
-      <textarea placeholder="Materiales pendientes por desarrollar..." style="width:100%;min-height:50px;margin-top:6px;resize:vertical;background:var(--panel-blue-dark);border:2px dashed var(--orange);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.pending)}</textarea>
+      <div class="tema-body" style="display:${isOpen?'flex':'none'};flex-direction:column;">
+        <textarea placeholder="Observaciones de este tema..." style="width:100%;min-height:50px;margin-top:8px;resize:vertical;background:var(--panel-blue-dark);border:2px solid var(--border-cyan-soft);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.notes)}</textarea>
+        <textarea placeholder="Materiales pendientes por desarrollar..." style="width:100%;min-height:50px;margin-top:6px;resize:vertical;background:var(--panel-blue-dark);border:2px dashed var(--orange);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.pending)}</textarea>
+      </div>
     `;
+    const header = card.querySelector('.tema-header');
     const checkbox = card.querySelector('input[type=checkbox]');
+    const deleteBtn = card.querySelector('.icon-btn');
     const areas = card.querySelectorAll('textarea');
     const notesAreaEl = areas[0];
     const pendingAreaEl = areas[1];
+
+    header.addEventListener('click', (e)=>{
+      if(e.target === checkbox || e.target === deleteBtn) return;
+      if(expandedTemas.has(t.id)) expandedTemas.delete(t.id); else expandedTemas.add(t.id);
+      renderTemaList();
+    });
+    checkbox.addEventListener('click', (e)=> e.stopPropagation());
     checkbox.addEventListener('change', (e)=>{
       entry.seen = e.target.checked;
       save('pc_topics_tracker', state.topicsTracker);
       renderTemaProgress();
+    });
+    deleteBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(confirm('¿Eliminar el tema "'+t.name+'" de '+currentTemaSubject+'? Se quita para todos los grupos.')){
+        state.topicsCatalog[currentTemaSubject] = state.topicsCatalog[currentTemaSubject].filter(x=>x.id!==t.id);
+        save('pc_topics_catalog', state.topicsCatalog);
+        Object.keys(state.topicsTracker[currentTemaSubject]||{}).forEach(g=>{
+          delete state.topicsTracker[currentTemaSubject][g][t.id];
+        });
+        save('pc_topics_tracker', state.topicsTracker);
+        expandedTemas.delete(t.id);
+        renderTemaList();
+        renderTemaProgress();
+        showBanner('TEMA ELIMINADO');
+      }
     });
     let notesTimer2 = null;
     notesAreaEl.addEventListener('input', ()=>{
@@ -1608,19 +1681,6 @@ function renderTemaList(){
         entry.pending = pendingAreaEl.value;
         save('pc_topics_tracker', state.topicsTracker);
       }, 500);
-    });
-    card.querySelector('.icon-btn').addEventListener('click', ()=>{
-      if(confirm('¿Eliminar el tema "'+t.name+'" de '+currentTemaSubject+'? Se quita para todos los grupos.')){
-        state.topicsCatalog[currentTemaSubject] = state.topicsCatalog[currentTemaSubject].filter(x=>x.id!==t.id);
-        save('pc_topics_catalog', state.topicsCatalog);
-        Object.keys(state.topicsTracker[currentTemaSubject]||{}).forEach(g=>{
-          delete state.topicsTracker[currentTemaSubject][g][t.id];
-        });
-        save('pc_topics_tracker', state.topicsTracker);
-        renderTemaList();
-        renderTemaProgress();
-        showBanner('TEMA ELIMINADO');
-      }
     });
     list.appendChild(card);
   });
@@ -1911,6 +1971,18 @@ renderTicks();
 applyTheme(currentTheme);
 document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
 renderActividadesRecientes();
+
+/* ==================== BOTÓN VOLVER ARRIBA ==================== */
+const backToTopBtn = document.getElementById('backToTopBtn');
+if(backToTopBtn){
+  window.addEventListener('scroll', ()=>{
+    if(window.scrollY > 250){ backToTopBtn.classList.add('show'); }
+    else{ backToTopBtn.classList.remove('show'); }
+  });
+  backToTopBtn.addEventListener('click', ()=>{
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
 
 /* ==================== SERVICE WORKER ==================== */
 if('serviceWorker' in navigator){
