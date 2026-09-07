@@ -636,6 +636,7 @@ textarea#notesArea, textarea#planArea{
       <button class="hex-btn" data-tab="horario">H<small>Horario</small></button>
       <button class="hex-btn" data-tab="tareas">T<small>Tareas</small></button>
       <button class="hex-btn" data-tab="plan">P<small>Plan</small></button>
+      <button class="hex-btn" data-tab="temas">S<small>Temas</small></button>
       <button class="hex-btn" data-tab="notas">N<small>Notas</small></button>
       <button class="hex-btn" data-tab="metas">M<small>Metas</small></button>
       <button class="hex-btn" data-tab="escaner">Q<small>Escáner</small></button>
@@ -686,6 +687,29 @@ textarea#notesArea, textarea#planArea{
         <div class="day-row" id="planWeekNav" style="align-items:center;"></div>
         <textarea id="planArea" placeholder="Qué debe estar sucediendo esta semana en esta materia..."></textarea>
         <div class="save-status" id="planSaveStatus"></div>
+      </section>
+
+      <!-- SEGUIMIENTO DE TEMAS -->
+      <section class="tab-panel" id="tab-temas">
+        <div class="panel-title">SEGUIMIENTO DE TEMAS</div>
+
+        <div class="day-row" id="temaSubjectRow"></div>
+        <div class="day-row" id="temaGroupRow"></div>
+
+        <div class="inline-form" id="formGrupo">
+          <input type="text" id="grupoNombre" placeholder="Nombre del grupo (ej. 3°A)" class="full">
+          <button class="pill teal" id="saveGrupo">AÑADIR GRUPO</button>
+        </div>
+
+        <div class="inline-form" id="formTemaNuevo">
+          <input type="text" id="temaNombre" placeholder="Nombre del tema" class="full">
+          <button class="pill teal" id="saveTemaNuevo">AÑADIR TEMA</button>
+        </div>
+
+        <div class="progress-bar"><div class="fill" id="temasFill"></div></div>
+        <div class="save-status" id="temasProgressLabel"></div>
+
+        <div id="temaList"></div>
       </section>
 
       <!-- NOTAS -->
@@ -983,18 +1007,40 @@ if(load('pc_data_version', 0) < 3){
 }
 save('pc_data_version', DATA_VERSION);
 
+// Catálogo de temas por materia. Se puede precargar con DEFAULT_TOPICS_CATALOG
+// cuando lleguen los temarios reales de cada materia (mismo patrón que DEFAULT_PLANS).
+const DEFAULT_TOPICS_CATALOG = {
+  "Histología Humana": [],
+  "Fisiopatología": [],
+  "Patología Clínica II": []
+};
+const TOPICS_VERSION = 1;
+if(load('pc_topics_version', 0) < 1){
+  const existingCatalog = load('pc_topics_catalog', {});
+  Object.keys(DEFAULT_TOPICS_CATALOG).forEach(subject=>{
+    if(!existingCatalog[subject]) existingCatalog[subject] = DEFAULT_TOPICS_CATALOG[subject];
+  });
+  save('pc_topics_catalog', existingCatalog);
+}
+save('pc_topics_version', TOPICS_VERSION);
+
 let state = {
   schedule: load('pc_schedule', DEFAULT_SCHEDULE),
   tasks: load('pc_tasks', []),
   notes: load('pc_notes', ""),
   goals: load('pc_goals', []),
-  plans: load('pc_plans', {})
+  plans: load('pc_plans', {}),
+  topicsCatalog: load('pc_topics_catalog', DEFAULT_TOPICS_CATALOG),
+  topicsGroups: load('pc_topics_groups', {}),
+  topicsTracker: load('pc_topics_tracker', {})
 };
 
 let currentDay = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
 let currentTab = 'horario';
 let taskFilter = 'all';
 let currentSubject = SUBJECTS[0];
+let currentTemaSubject = SUBJECTS[0];
+let currentTemaGroup = null;
 
 /* ===================== CALENDARIO / SEMANAS (Ciclo 2026-2027) ===================== */
 const SEMESTER_START = new Date(2026,7,24);   // 24 agosto 2026 — inicio de clases
@@ -1090,6 +1136,7 @@ function setTab(tab){
     horario:[headerName,'HORARIO DE CLASES'],
     tareas:[headerName,'GESTOR DE TAREAS'],
     plan:[headerName,'PLANEACIÓN SEMANAL'],
+    temas:[headerName,'SEGUIMIENTO DE TEMAS'],
     notas:[headerName,'BITÁCORA PERSONAL'],
     metas:[headerName,'METAS SEMANALES'],
     escaner:[headerName,'ESCÁNER DE ACTIVIDADES']
@@ -1124,6 +1171,11 @@ function renderActionBar(){
       {label:'GUARDAR', cls:'teal', fn:savePlan},
       {label:'SEM. ANT.', cls:'orange', fn:()=>{ planWeek = Math.max(1, planWeek-1); renderPlanTab(); }},
       {label:'SEM. SIG.', cls:'orange', fn:()=>{ planWeek = Math.min(TOTAL_WEEKS, planWeek+1); renderPlanTab(); }},
+      {label:'COMPARTIR', cls:'orange', fn:shareApp}
+    ],
+    temas:[
+      {label:'+ GRUPO', cls:'teal', fn:()=>toggleForm('formGrupo')},
+      {label:'+ TEMA', cls:'teal', fn:()=>toggleForm('formTemaNuevo')},
       {label:'COMPARTIR', cls:'orange', fn:shareApp}
     ],
     notas:[
@@ -1321,6 +1373,200 @@ function renderPlanTab(){
 document.getElementById('planArea').addEventListener('input', ()=>{
   document.getElementById('planSaveStatus').textContent = 'Escribiendo...';
 });
+
+/* ===================== SEGUIMIENTO DE TEMAS ===================== */
+function ensureGroupsForSubject(subject){
+  if(!state.topicsGroups[subject]) state.topicsGroups[subject] = [];
+}
+
+function ensureTrackerForGroup(subject, group){
+  if(!state.topicsTracker[subject]) state.topicsTracker[subject] = {};
+  if(!state.topicsTracker[subject][group]) state.topicsTracker[subject][group] = {};
+}
+
+function getTemaEntry(subject, group, topicId){
+  ensureTrackerForGroup(subject, group);
+  if(!state.topicsTracker[subject][group][topicId]){
+    state.topicsTracker[subject][group][topicId] = {seen:false, notes:'', pending:''};
+  }
+  return state.topicsTracker[subject][group][topicId];
+}
+
+function renderTemaSubjectRow(){
+  const row = document.getElementById('temaSubjectRow');
+  row.innerHTML = '';
+  SUBJECTS.forEach(s=>{
+    const btn = document.createElement('button');
+    btn.className = 'day-pill' + (s===currentTemaSubject ? ' active' : '');
+    btn.textContent = s;
+    btn.addEventListener('click', ()=>{
+      currentTemaSubject = s;
+      ensureGroupsForSubject(currentTemaSubject);
+      const groups = state.topicsGroups[currentTemaSubject];
+      currentTemaGroup = groups.length ? groups[0] : null;
+      renderTemaTab();
+    });
+    row.appendChild(btn);
+  });
+}
+
+function renderTemaGroupRow(){
+  const row = document.getElementById('temaGroupRow');
+  row.innerHTML = '';
+  ensureGroupsForSubject(currentTemaSubject);
+  const groups = state.topicsGroups[currentTemaSubject];
+  if(groups.length===0){
+    row.innerHTML = '<div class="empty-hint" style="padding:10px;">Sin grupos para esta materia. Usa + GRUPO para añadir uno (ej. 3°A).</div>';
+    return;
+  }
+  groups.forEach(g=>{
+    const btn = document.createElement('button');
+    btn.className = 'day-pill' + (g===currentTemaGroup ? ' active' : '');
+    btn.textContent = g;
+    btn.addEventListener('click', ()=>{ currentTemaGroup = g; renderTemaList(); renderTemaProgress(); });
+    row.appendChild(btn);
+  });
+  const del = document.createElement('button');
+  del.className = 'day-pill';
+  del.textContent = '🗑 grupo';
+  del.title = 'Eliminar grupo actual';
+  del.addEventListener('click', ()=>{
+    if(!currentTemaGroup) return;
+    if(confirm('¿Eliminar el grupo "'+currentTemaGroup+'" y todo su seguimiento en '+currentTemaSubject+'?')){
+      state.topicsGroups[currentTemaSubject] = state.topicsGroups[currentTemaSubject].filter(x=>x!==currentTemaGroup);
+      if(state.topicsTracker[currentTemaSubject]) delete state.topicsTracker[currentTemaSubject][currentTemaGroup];
+      save('pc_topics_groups', state.topicsGroups);
+      save('pc_topics_tracker', state.topicsTracker);
+      const groups = state.topicsGroups[currentTemaSubject];
+      currentTemaGroup = groups.length ? groups[0] : null;
+      renderTemaTab();
+      showBanner('GRUPO ELIMINADO');
+    }
+  });
+  row.appendChild(del);
+}
+
+document.getElementById('saveGrupo').addEventListener('click', ()=>{
+  const val = document.getElementById('grupoNombre').value.trim();
+  if(!val){ showBanner('ESCRIBE UN NOMBRE DE GRUPO'); return; }
+  ensureGroupsForSubject(currentTemaSubject);
+  if(state.topicsGroups[currentTemaSubject].includes(val)){ showBanner('ESE GRUPO YA EXISTE'); return; }
+  state.topicsGroups[currentTemaSubject].push(val);
+  save('pc_topics_groups', state.topicsGroups);
+  document.getElementById('grupoNombre').value='';
+  document.getElementById('formGrupo').classList.remove('show');
+  currentTemaGroup = val;
+  renderTemaTab();
+  showBanner('GRUPO AÑADIDO');
+});
+
+document.getElementById('saveTemaNuevo').addEventListener('click', ()=>{
+  const val = document.getElementById('temaNombre').value.trim();
+  if(!val){ showBanner('ESCRIBE UN TEMA'); return; }
+  if(!state.topicsCatalog[currentTemaSubject]) state.topicsCatalog[currentTemaSubject] = [];
+  const id = 't'+Date.now();
+  state.topicsCatalog[currentTemaSubject].push({id, name:val});
+  save('pc_topics_catalog', state.topicsCatalog);
+  document.getElementById('temaNombre').value='';
+  document.getElementById('formTemaNuevo').classList.remove('show');
+  renderTemaList();
+  renderTemaProgress();
+  showBanner('TEMA AÑADIDO');
+});
+
+function renderTemaProgress(){
+  const fill = document.getElementById('temasFill');
+  const label = document.getElementById('temasProgressLabel');
+  const topics = state.topicsCatalog[currentTemaSubject] || [];
+  if(!currentTemaGroup || topics.length===0){
+    fill.style.width = '0%';
+    label.textContent = '';
+    return;
+  }
+  ensureTrackerForGroup(currentTemaSubject, currentTemaGroup);
+  const tracker = state.topicsTracker[currentTemaSubject][currentTemaGroup];
+  const done = topics.filter(t=> tracker[t.id] && tracker[t.id].seen).length;
+  fill.style.width = topics.length ? (done/topics.length*100)+'%' : '0%';
+  label.textContent = done+' de '+topics.length+' temas vistos · '+currentTemaSubject+' · '+currentTemaGroup;
+}
+
+function renderTemaList(){
+  const list = document.getElementById('temaList');
+  list.innerHTML = '';
+  const topics = state.topicsCatalog[currentTemaSubject] || [];
+
+  if(!currentTemaGroup){
+    list.innerHTML = '<div class="empty-hint">Primero añade o selecciona un grupo para esta materia.</div>';
+    return;
+  }
+  if(topics.length===0){
+    list.innerHTML = '<div class="empty-hint">Sin temas cargados para esta materia. Usa + TEMA para añadir uno.</div>';
+    return;
+  }
+
+  topics.forEach(t=>{
+    const entry = getTemaEntry(currentTemaSubject, currentTemaGroup, t.id);
+    const card = document.createElement('div');
+    card.className = 'class-card';
+    card.style.flexDirection = 'column';
+    card.style.alignItems = 'stretch';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" style="width:20px;height:20px;accent-color:var(--teal);flex:0 0 auto;" ${entry.seen?'checked':''}>
+        <div class="class-info"><div class="name">${escapeHtml(t.name)}</div></div>
+        <button class="icon-btn" title="Eliminar tema">×</button>
+      </div>
+      <textarea placeholder="Observaciones de este tema..." style="width:100%;min-height:50px;margin-top:8px;resize:vertical;background:var(--panel-blue-dark);border:2px solid var(--border-cyan-soft);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.notes)}</textarea>
+      <textarea placeholder="Materiales pendientes por desarrollar..." style="width:100%;min-height:50px;margin-top:6px;resize:vertical;background:var(--panel-blue-dark);border:2px dashed var(--orange);border-radius:6px;color:var(--cream);font-family:var(--font-body);font-size:16px;padding:6px 8px;">${escapeHtml(entry.pending)}</textarea>
+    `;
+    const checkbox = card.querySelector('input[type=checkbox]');
+    const areas = card.querySelectorAll('textarea');
+    const notesAreaEl = areas[0];
+    const pendingAreaEl = areas[1];
+    checkbox.addEventListener('change', (e)=>{
+      entry.seen = e.target.checked;
+      save('pc_topics_tracker', state.topicsTracker);
+      renderTemaProgress();
+    });
+    let notesTimer2 = null;
+    notesAreaEl.addEventListener('input', ()=>{
+      clearTimeout(notesTimer2);
+      notesTimer2 = setTimeout(()=>{
+        entry.notes = notesAreaEl.value;
+        save('pc_topics_tracker', state.topicsTracker);
+      }, 500);
+    });
+    let pendingTimer = null;
+    pendingAreaEl.addEventListener('input', ()=>{
+      clearTimeout(pendingTimer);
+      pendingTimer = setTimeout(()=>{
+        entry.pending = pendingAreaEl.value;
+        save('pc_topics_tracker', state.topicsTracker);
+      }, 500);
+    });
+    card.querySelector('.icon-btn').addEventListener('click', ()=>{
+      if(confirm('¿Eliminar el tema "'+t.name+'" de '+currentTemaSubject+'? Se quita para todos los grupos.')){
+        state.topicsCatalog[currentTemaSubject] = state.topicsCatalog[currentTemaSubject].filter(x=>x.id!==t.id);
+        save('pc_topics_catalog', state.topicsCatalog);
+        Object.keys(state.topicsTracker[currentTemaSubject]||{}).forEach(g=>{
+          delete state.topicsTracker[currentTemaSubject][g][t.id];
+        });
+        save('pc_topics_tracker', state.topicsTracker);
+        renderTemaList();
+        renderTemaProgress();
+        showBanner('TEMA ELIMINADO');
+      }
+    });
+    list.appendChild(card);
+  });
+}
+
+function renderTemaTab(){
+  renderTemaSubjectRow();
+  renderTemaGroupRow();
+  renderTemaList();
+  renderTemaProgress();
+}
 
 /* ===================== NOTAS ===================== */
 const notesArea = document.getElementById('notesArea');
@@ -1593,6 +1839,9 @@ renderSchedule();
 renderTasks();
 renderGoals();
 renderPlanTab();
+ensureGroupsForSubject(currentTemaSubject);
+currentTemaGroup = (state.topicsGroups[currentTemaSubject]||[])[0] || null;
+renderTemaTab();
 renderTicks();
 applyTheme(currentTheme);
 document.getElementById('btnIniciarEscaneoInline').addEventListener('click', iniciarEscaneo);
